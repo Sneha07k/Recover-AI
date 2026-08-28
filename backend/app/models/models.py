@@ -56,3 +56,23 @@ class EventLog(Base):
     entity_id = Column(Integer, nullable=False)
     payload = Column(JSON, nullable=False, default=dict)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
+class RiskAssessment(Base):
+    """
+    One deterministic risk assessment produced for a failed transaction:
+    how likely it was to fail, how much money is involved, how likely a
+    recovery action is to succeed, and the combined priority score.
+    """
+
+    __tablename__ = "risk_assessments"
+
+    id = Column(Integer, primary_key=True)
+    transaction_id = Column(Integer, ForeignKey("transactions.id"), nullable=False)
+    customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False)
+    payment_method = Column(Enum(PaymentMethod), nullable=False)
+    amount = Column(Float, nullable=False)
+    failure_probability = Column(Float, nullable=False)
+    recovery_probability = Column(Float, nullable=False)
+    risk_score = Column(Float, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))

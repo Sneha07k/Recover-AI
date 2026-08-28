@@ -3,16 +3,17 @@ import logging
 from app.events.bus import event_bus
 from app.events.enums import EventType
 from app.events.schemas import Event
+from app.risk.engine import assess_risk_on_payment_failed
 
 logger = logging.getLogger("recoverai.events")
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 
 
-def log_payment_failed(event: Event) -> None:
+def log_payment_failed(db, event: Event) -> None:
     """
     Example consumer: just observes PAYMENT_FAILED events and logs them.
-    This is a stand-in for what the Risk Engine (Phase 4) will do instead:
-    subscribe to this same event type and actually score the risk.
+    Kept alongside the real Risk Engine consumer to show that multiple,
+    independent consumers can react to the exact same event.
     """
     txn_id = event.entity_id
     amount = event.payload.get("amount")
@@ -22,3 +23,4 @@ def log_payment_failed(event: Event) -> None:
 
 def register_default_consumers() -> None:
     event_bus.subscribe(EventType.PAYMENT_FAILED, log_payment_failed)
+    event_bus.subscribe(EventType.PAYMENT_FAILED, assess_risk_on_payment_failed)

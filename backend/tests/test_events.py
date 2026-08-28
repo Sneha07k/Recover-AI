@@ -9,10 +9,6 @@ from app.models.models import EventLog
 
 
 def make_test_session():
-    """
-    Fresh in-memory database per test, so events from one test never
-    leak into another test's assertions.
-    """
     engine = create_engine(
         "sqlite:///:memory:", connect_args={"check_same_thread": False}
     )
@@ -48,7 +44,7 @@ def test_subscribers_are_called_on_publish():
     try:
         bus = EventBus()
         received = []
-        bus.subscribe(EventType.PAYMENT_FAILED, lambda e: received.append(e))
+        bus.subscribe(EventType.PAYMENT_FAILED, lambda db, e: received.append(e))
 
         event = Event(
             event_type=EventType.PAYMENT_FAILED,
@@ -69,7 +65,7 @@ def test_subscribers_not_called_for_other_event_types():
     try:
         bus = EventBus()
         received = []
-        bus.subscribe(EventType.PAYMENT_FAILED, lambda e: received.append(e))
+        bus.subscribe(EventType.PAYMENT_FAILED, lambda db, e: received.append(e))
 
         event = Event(
             event_type=EventType.PAYMENT_SUCCESS,

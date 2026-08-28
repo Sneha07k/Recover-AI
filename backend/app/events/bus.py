@@ -12,7 +12,7 @@ class EventBus:
     """
     A simple in-process publish/subscribe system. Producers call publish()
     with an Event; every function that has subscribe()'d to that event's
-    type gets called with it.
+    type gets called with it, along with the current db session.
 
     We deliberately don't reach for Kafka/Redis here — a single Python
     process handling a simulated event stream doesn't need a distributed
@@ -21,12 +21,12 @@ class EventBus:
     """
 
     def __init__(self):
-        self._subscribers: dict[EventType, list[Callable[[Event], None]]] = defaultdict(
-            list
+        self._subscribers: dict[EventType, list[Callable[[Session, Event], None]]] = (
+            defaultdict(list)
         )
 
     def subscribe(
-        self, event_type: EventType, handler: Callable[[Event], None]
+        self, event_type: EventType, handler: Callable[[Session, Event], None]
     ) -> None:
         self._subscribers[event_type].append(handler)
 
@@ -44,7 +44,7 @@ class EventBus:
         db.commit()
 
         for handler in self._subscribers[event.event_type]:
-            handler(event)
+            handler(db, event)
 
 
 # Single shared instance — producers and consumers both import this same
