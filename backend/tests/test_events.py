@@ -80,12 +80,13 @@ def test_subscribers_not_called_for_other_event_types():
         db.close()
 
 
-def test_generate_transactions_emits_two_events_per_transaction():
+def test_generate_transactions_emits_expected_event_counts():
     from app.simulator.generator import (
         create_merchant,
         generate_customers,
         generate_transactions,
     )
+    from app.models.enums import TransactionStatus
 
     db = make_test_session()
     try:
@@ -94,7 +95,14 @@ def test_generate_transactions_emits_two_events_per_transaction():
         transactions = generate_transactions(db, customers, 50)
 
         events = db.query(EventLog).all()
-        # PAYMENT_CREATED + (PAYMENT_SUCCESS or PAYMENT_FAILED) per transaction
-        assert len(events) == len(transactions) * 2
+        failed_count = sum(
+            1 for t in transactions if t.status == TransactionStatus.FAILED
+        )
+
+        # Every transaction: PAYMENT_CREATED + outcome (2 events).
+        # Every FAILED transaction additionally gets: RECOVERY_ATTEMPTED +
+        # RECOVERY_SUCCESS/FAILED (2 more events).
+        expected = len(transactions) * 2 + failed_count * 2
+        assert len(events) == expected
     finally:
         db.close()

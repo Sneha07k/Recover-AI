@@ -1,10 +1,20 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Enum, JSON
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    Float,
+    DateTime,
+    ForeignKey,
+    Enum,
+    JSON,
+    Boolean,
+)
 from sqlalchemy.orm import relationship
 
 from app.database import Base
-from app.models.enums import CustomerType, PaymentMethod, TransactionStatus
+from app.models.enums import CustomerType, PaymentMethod, TransactionStatus, FailureType
 
 
 class Merchant(Base):
@@ -75,4 +85,23 @@ class RiskAssessment(Base):
     failure_probability = Column(Float, nullable=False)
     recovery_probability = Column(Float, nullable=False)
     risk_score = Column(Float, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
+class RecoveryAttempt(Base):
+    """
+    Records the outcome of a (simplified, unconditional) retry made on a
+    failed transaction. This is the historical, labeled data we need to
+    train the recovery-prediction model in Phase 5. failure_type is the
+    simulator's hidden ground truth — it must NEVER be used as a model
+    feature, only to generate this training label.
+    """
+
+    __tablename__ = "recovery_attempts"
+
+    id = Column(Integer, primary_key=True)
+    transaction_id = Column(Integer, ForeignKey("transactions.id"), nullable=False)
+    failure_type = Column(Enum(FailureType), nullable=False)
+    succeeded = Column(Boolean, nullable=False)
+    amount_recovered = Column(Float, nullable=False, default=0.0)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
