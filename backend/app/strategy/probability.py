@@ -101,29 +101,31 @@ def predict_recovery_probability(
     payment_method: PaymentMethod,
     amount: float,
     exclude_transaction_id: int | None = None,
+    force_rule_based: bool = False,
 ) -> float:
     """
     Uses the trained ML model if one exists; otherwise falls back to the
     Phase 4 rule-based estimate. This graceful degradation matters in
-    practice â€” a freshly deployed system has no trained model yet and
+    practice — a freshly deployed system has no trained model yet and
     should still make sensible decisions instead of failing outright.
+
+    force_rule_based=True skips the model entirely even if one exists —
+    used by Phase 12's experimentation harness to isolate "how much does
+    the ML model itself help" as a controlled comparison.
     """
-    model, feature_names = _load_model()
+    if not force_rule_based:
+        model, feature_names = _load_model()
+        if model is not None:
+            features = build_live_features(
+                db, customer_id, payment_method, amount, exclude_transaction_id
+            )
+            row = pd.DataFrame([features])
+            method_dummies = pd.get_dummies(
+                row["payment_method"], prefix="method"
+            ).astype(float)
+            numeric = row.drop(columns=["payment_method"])
+            X = pd.concat([numeric, method_dummies], axis=1)
+            X = X.reindex(columns=feature_names, fill_value=0.0)
+            return float(model.predict_proba(X)[0, 1])
 
-    if model is None:
-        return RECOVERY_PROBABILITY_BY_METHOD[payment_method]
-
-    features = build_live_features(
-        db, customer_id, payment_method, amount, exclude_transaction_id
-    )
-    row = pd.DataFrame([features])
-    method_dummies = pd.get_dummies(row["payment_method"], prefix="method").astype(float)
-    numeric = row.drop(columns=["payment_method"])
-    X = pd.concat([numeric, method_dummies], axis=1)
-    # Align columns exactly to what the model was trained on. Any payment
-    # method missing from this single row (or one the model never saw)
-    # gets filled with 0 rather than crashing on a column mismatch.
-    X = X.reindex(columns=feature_names, fill_value=0.0)
-
-    return float(model.predict_proba(X)[0, 1])
-
+    return RECOVERY_PROBABILITY_BY_METHOD[payment_method]

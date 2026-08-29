@@ -25,6 +25,7 @@ def recommend_strategy(
     customer_id: int,
     payment_method: PaymentMethod,
     amount: float,
+    force_rule_based: bool = False,
 ) -> StrategyRecommendation:
     """
     Computes expected value for every candidate strategy and returns the
@@ -32,7 +33,12 @@ def recommend_strategy(
     guarantees the result never has negative expected value.
     """
     base_probability = predict_recovery_probability(
-        db, customer_id, payment_method, amount, exclude_transaction_id=transaction_id
+        db,
+        customer_id,
+        payment_method,
+        amount,
+        exclude_transaction_id=transaction_id,
+        force_rule_based=force_rule_based,
     )
 
     candidates = []
@@ -42,7 +48,9 @@ def recommend_strategy(
             expected_value = 0.0
         else:
             probability = min(base_probability * params.probability_multiplier, 0.95)
-            expected_value = probability * amount * params.amount_multiplier - params.cost
+            expected_value = (
+                probability * amount * params.amount_multiplier - params.cost
+            )
         candidates.append((strategy, probability, params.cost, expected_value))
 
     best_strategy, best_probability, best_cost, best_ev = max(
@@ -96,4 +104,3 @@ def recommend_strategy_on_payment_failed(db: Session, event: Event) -> StrategyD
     db.commit()
     db.refresh(decision)
     return decision
-

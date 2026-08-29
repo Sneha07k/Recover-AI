@@ -142,3 +142,27 @@ class PolicyDecision(Base):
     verdict = Column(String, nullable=False)
     reasons = Column(JSON, nullable=False, default=list)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
+class ExperimentResult(Base):
+    """
+    One row per (condition, transaction) pair evaluated by the Phase 12
+    experimentation harness. Deliberately separate from StrategyDecision/
+    PolicyDecision/RecoveryAttempt — those represent the single, real,
+    live decision pipeline; this table holds hypothetical "what if we'd
+    used strategy X instead" comparisons and must never be confused with
+    or contaminate the live audit trail.
+    """
+
+    __tablename__ = "experiment_results"
+
+    id = Column(Integer, primary_key=True)
+    condition = Column(String, nullable=False)
+    transaction_id = Column(Integer, ForeignKey("transactions.id"), nullable=False)
+    strategy = Column(Enum(RecoveryStrategy), nullable=False)
+    policy_verdict = Column(String, nullable=False)
+    executed = Column(Boolean, nullable=False)
+    succeeded = Column(Boolean, nullable=False)
+    amount_recovered = Column(Float, nullable=False, default=0.0)
+    cost = Column(Float, nullable=False, default=0.0)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
