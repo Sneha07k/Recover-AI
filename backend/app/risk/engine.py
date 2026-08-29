@@ -37,7 +37,7 @@ def assess_risk_on_payment_failed(db: Session, event: Event) -> RiskAssessment:
         risk_score=risk_score,
     )
     db.add(assessment)
-    db.commit()
+    db.flush()
     db.refresh(assessment)
     return assessment
 

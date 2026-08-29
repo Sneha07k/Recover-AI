@@ -273,6 +273,6 @@ def evaluate_and_record_policy(
         reasons=result.reasons,
     )
     db.add(record)
-    db.commit()
+    db.flush()
     db.refresh(record)
     return record

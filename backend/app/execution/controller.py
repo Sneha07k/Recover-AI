@@ -2,13 +2,12 @@ from sqlalchemy.orm import Session
 
 from app.agents.ambiguity import is_ambiguous
 from app.agents.engine import make_agent_decision
-from app.events.enums import EventType
 from app.events.schemas import Event
 from app.execution.executor import execute_strategy
 from app.models.enums import PaymentMethod, RecoveryStrategy
 from app.models.models import Customer, Transaction
 from app.policies.engine import ALLOW, DENY, ESCALATE, evaluate_and_record_policy
-from app.strategy.engine import recommend_strategy, recommend_strategy_on_payment_failed
+from app.strategy.engine import persist_strategy_decision, recommend_strategy
 
 STOPPED_BY_STRATEGY = "stopped_by_strategy"
 STOPPED_BY_POLICY = "stopped_by_policy"
@@ -47,20 +46,15 @@ def run_closed_loop(
     automatically across a bulk simulation (see Phase 7). Set it True only
     for small, deliberate runs where the real agent should participate.
     """
-    event = Event(
-        event_type=EventType.PAYMENT_FAILED,
-        entity_type="transaction",
-        entity_id=transaction_id,
-        payload={
-            "amount": amount,
-            "payment_method": payment_method.value,
-            "customer_id": customer_id,
-        },
-    )
-
-    recommend_strategy_on_payment_failed(db, event)
+    # Phase 13: compute the recommendation ONCE and reuse it for both
+    # persistence and the ambiguity check below — Phase 9 originally
+    # computed this twice (once via a persisting wrapper, once standalone
+    # for the candidate list), a known inefficiency now fixed.
     recommendation = recommend_strategy(
         db, transaction_id, customer_id, payment_method, amount
+    )
+    persist_strategy_decision(
+        db, transaction_id, customer_id, payment_method, amount, recommendation
     )
 
     strategy = recommendation.strategy

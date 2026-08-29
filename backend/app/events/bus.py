@@ -27,8 +27,13 @@ class EventBus:
         self._subscribers[event_type].append(handler)
 
     def publish(self, db: Session, event: Event) -> None:
-        # Persist first so the audit trail exists even if a subscriber
-        # raises an exception while handling it.
+        # Flush (not commit) so the event log entry gets an ID and is
+        # visible to subsequent queries in this same session, without
+        # forcing a disk sync on every single event. Committing is now
+        # the caller's responsibility, done periodically for throughput
+        # (see app/simulator/generator.py) — this is the batching change
+        # from Phase 13. Trade-off, stated plainly: if the process
+        # crashes mid-batch, that batch's work is lost.
         record = EventLog(
             event_type=event.event_type.value,
             entity_type=event.entity_type,
@@ -37,11 +42,10 @@ class EventBus:
             created_at=event.created_at,
         )
         db.add(record)
-        db.commit()
+        db.flush()
 
         for handler in self._subscribers[event.event_type]:
             handler(db, event)
-
 
 # Single shared instance â€” producers and consumers both import this same
 # object so they're all talking to the same bus.

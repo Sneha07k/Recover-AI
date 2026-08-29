@@ -1,6 +1,7 @@
 ﻿import logging
 from functools import lru_cache
 from pathlib import Path
+from sqlalchemy import case, func
 
 import joblib
 import pandas as pd
@@ -38,16 +39,25 @@ def _load_model():
 
 
 def _recovery_counts(db: Session, filter_clause, exclude_transaction_id):
+    """
+    Phase 13: was previously loading every matching RecoveryAttempt row
+    into Python just to count and sum() them by hand — O(n) row
+    materialization on every call. A single SQL-side aggregate query does
+    the same work entirely inside the database.
+    """
     query = (
-        db.query(RecoveryAttempt)
+        db.query(
+            func.count(RecoveryAttempt.id),
+            func.coalesce(
+                func.sum(case((RecoveryAttempt.succeeded == True, 1), else_=0)), 0
+            ),  # noqa: E712
+        )
         .join(Transaction, RecoveryAttempt.transaction_id == Transaction.id)
         .filter(filter_clause)
     )
     if exclude_transaction_id is not None:
         query = query.filter(RecoveryAttempt.transaction_id != exclude_transaction_id)
-    attempts = query.all()
-    total = len(attempts)
-    success = sum(1 for a in attempts if a.succeeded)
+    total, success = query.one()
     return success, total
 
 

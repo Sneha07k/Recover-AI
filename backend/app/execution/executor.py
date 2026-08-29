@@ -94,7 +94,7 @@ def execute_strategy(
         ),
     )
 
-    db.commit()
+    db.flush()
     db.refresh(attempt)
     db.refresh(transaction)
     return attempt

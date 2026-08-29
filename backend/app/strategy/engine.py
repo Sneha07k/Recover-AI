@@ -73,22 +73,21 @@ def recommend_strategy(
     )
 
 
-def recommend_strategy_on_payment_failed(db: Session, event: Event) -> StrategyDecision:
+def persist_strategy_decision(
+    db: Session,
+    transaction_id: int,
+    customer_id: int,
+    payment_method: PaymentMethod,
+    amount: float,
+    recommendation: StrategyRecommendation,
+) -> StrategyDecision:
     """
-    Consumer for PAYMENT_FAILED events. Persists the recommended strategy
-    and its expected-value reasoning. NOTE: nothing is executed here â€” no
-    retry actually happens, no money moves. Phase 8 adds the policy gate;
-    Phase 9 wires in real execution.
+    Persists an ALREADY-COMPUTED recommendation. Split out from
+    recommend_strategy_on_payment_failed (Phase 13) so the closed-loop
+    controller can compute the recommendation once and reuse it for both
+    persistence and the ambiguity check, instead of computing it twice —
+    a real, measurable inefficiency flagged back in Phase 9.
     """
-    transaction_id = event.entity_id
-    customer_id = event.payload["customer_id"]
-    payment_method = PaymentMethod(event.payload["payment_method"])
-    amount = event.payload["amount"]
-
-    recommendation = recommend_strategy(
-        db, transaction_id, customer_id, payment_method, amount
-    )
-
     decision = StrategyDecision(
         transaction_id=transaction_id,
         customer_id=customer_id,
@@ -101,6 +100,26 @@ def recommend_strategy_on_payment_failed(db: Session, event: Event) -> StrategyD
         reasoning=recommendation.reasoning,
     )
     db.add(decision)
-    db.commit()
+    db.flush()
     db.refresh(decision)
     return decision
+
+
+def recommend_strategy_on_payment_failed(db: Session, event: Event) -> StrategyDecision:
+    """
+    Consumer for PAYMENT_FAILED events. Computes and persists the
+    recommended strategy. NOTE: nothing is executed here — no retry
+    actually happens, no money moves. Phase 8 adds the policy gate;
+    Phase 9 wires in real execution.
+    """
+    transaction_id = event.entity_id
+    customer_id = event.payload["customer_id"]
+    payment_method = PaymentMethod(event.payload["payment_method"])
+    amount = event.payload["amount"]
+
+    recommendation = recommend_strategy(
+        db, transaction_id, customer_id, payment_method, amount
+    )
+    return persist_strategy_decision(
+        db, transaction_id, customer_id, payment_method, amount, recommendation
+    )

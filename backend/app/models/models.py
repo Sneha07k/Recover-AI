@@ -36,7 +36,9 @@ class Customer(Base):
     __tablename__ = "customers"
 
     id = Column(Integer, primary_key=True)
-    merchant_id = Column(Integer, ForeignKey("merchants.id"), nullable=False)
+    merchant_id = Column(
+        Integer, ForeignKey("merchants.id"), nullable=False, index=True
+    )
     name = Column(String, nullable=False)
     email = Column(String, nullable=False)
     customer_type = Column(Enum(CustomerType), nullable=False)
@@ -50,15 +52,13 @@ class Transaction(Base):
     __tablename__ = "transactions"
 
     id = Column(Integer, primary_key=True)
-    customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False)
-    payment_method = Column(Enum(PaymentMethod), nullable=False)
+    customer_id = Column(
+        Integer, ForeignKey("customers.id"), nullable=False, index=True
+    )
+    payment_method = Column(Enum(PaymentMethod), nullable=False, index=True)
     amount = Column(Float, nullable=False)
-    status = Column(Enum(TransactionStatus), nullable=False)
+    status = Column(Enum(TransactionStatus), nullable=False, index=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-    # Whether this originally-failed transaction was later recovered via
-    # intervention, and how much came back. `status` never changes once
-    # set — it's a permanent historical fact — these two fields capture
-    # the separate, later outcome of recovery.
     recovered = Column(Boolean, nullable=False, default=False)
     recovered_amount = Column(Float, nullable=False, default=0.0)
 
@@ -71,7 +71,7 @@ class EventLog(Base):
     id = Column(Integer, primary_key=True)
     event_type = Column(String, nullable=False)
     entity_type = Column(String, nullable=False)
-    entity_id = Column(Integer, nullable=False)
+    entity_id = Column(Integer, nullable=False, index=True)
     payload = Column(JSON, nullable=False, default=dict)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
@@ -80,8 +80,12 @@ class RiskAssessment(Base):
     __tablename__ = "risk_assessments"
 
     id = Column(Integer, primary_key=True)
-    transaction_id = Column(Integer, ForeignKey("transactions.id"), nullable=False)
-    customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False)
+    transaction_id = Column(
+        Integer, ForeignKey("transactions.id"), nullable=False, index=True
+    )
+    customer_id = Column(
+        Integer, ForeignKey("customers.id"), nullable=False, index=True
+    )
     payment_method = Column(Enum(PaymentMethod), nullable=False)
     amount = Column(Float, nullable=False)
     failure_probability = Column(Float, nullable=False)
@@ -94,7 +98,9 @@ class RecoveryAttempt(Base):
     __tablename__ = "recovery_attempts"
 
     id = Column(Integer, primary_key=True)
-    transaction_id = Column(Integer, ForeignKey("transactions.id"), nullable=False)
+    transaction_id = Column(
+        Integer, ForeignKey("transactions.id"), nullable=False, index=True
+    )
     strategy = Column(Enum(RecoveryStrategy), nullable=True)
     failure_type = Column(Enum(FailureType), nullable=False)
     succeeded = Column(Boolean, nullable=False)
@@ -106,8 +112,12 @@ class StrategyDecision(Base):
     __tablename__ = "strategy_decisions"
 
     id = Column(Integer, primary_key=True)
-    transaction_id = Column(Integer, ForeignKey("transactions.id"), nullable=False)
-    customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False)
+    transaction_id = Column(
+        Integer, ForeignKey("transactions.id"), nullable=False, index=True
+    )
+    customer_id = Column(
+        Integer, ForeignKey("customers.id"), nullable=False, index=True
+    )
     payment_method = Column(Enum(PaymentMethod), nullable=False)
     amount = Column(Float, nullable=False)
     strategy = Column(Enum(RecoveryStrategy), nullable=False)
@@ -122,8 +132,12 @@ class AgentDecision(Base):
     __tablename__ = "agent_decisions"
 
     id = Column(Integer, primary_key=True)
-    transaction_id = Column(Integer, ForeignKey("transactions.id"), nullable=False)
-    customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False)
+    transaction_id = Column(
+        Integer, ForeignKey("transactions.id"), nullable=False, index=True
+    )
+    customer_id = Column(
+        Integer, ForeignKey("customers.id"), nullable=False, index=True
+    )
     action = Column(Enum(RecoveryStrategy), nullable=False)
     confidence = Column(Float, nullable=False)
     reason = Column(String, nullable=False)
@@ -135,9 +149,13 @@ class PolicyDecision(Base):
     __tablename__ = "policy_decisions"
 
     id = Column(Integer, primary_key=True)
-    transaction_id = Column(Integer, ForeignKey("transactions.id"), nullable=False)
-    customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False)
-    strategy = Column(Enum(RecoveryStrategy), nullable=False)
+    transaction_id = Column(
+        Integer, ForeignKey("transactions.id"), nullable=False, index=True
+    )
+    customer_id = Column(
+        Integer, ForeignKey("customers.id"), nullable=False, index=True
+    )
+    strategy = Column(Enum(RecoveryStrategy), nullable=False, index=True)
     amount = Column(Float, nullable=False)
     verdict = Column(String, nullable=False)
     reasons = Column(JSON, nullable=False, default=list)
@@ -145,20 +163,13 @@ class PolicyDecision(Base):
 
 
 class ExperimentResult(Base):
-    """
-    One row per (condition, transaction) pair evaluated by the Phase 12
-    experimentation harness. Deliberately separate from StrategyDecision/
-    PolicyDecision/RecoveryAttempt — those represent the single, real,
-    live decision pipeline; this table holds hypothetical "what if we'd
-    used strategy X instead" comparisons and must never be confused with
-    or contaminate the live audit trail.
-    """
-
     __tablename__ = "experiment_results"
 
     id = Column(Integer, primary_key=True)
-    condition = Column(String, nullable=False)
-    transaction_id = Column(Integer, ForeignKey("transactions.id"), nullable=False)
+    condition = Column(String, nullable=False, index=True)
+    transaction_id = Column(
+        Integer, ForeignKey("transactions.id"), nullable=False, index=True
+    )
     strategy = Column(Enum(RecoveryStrategy), nullable=False)
     policy_verdict = Column(String, nullable=False)
     executed = Column(Boolean, nullable=False)
