@@ -1,8 +1,7 @@
-"""
+﻿"""
 Run with: python scripts/train_recovery_model.py
 Assumes you've already run scripts/run_simulation.py to populate the database.
 """
-
 import os
 
 import joblib
@@ -25,20 +24,14 @@ def main():
         print(f"Recovered: {df['recovered'].sum()} ({df['recovered'].mean():.1%})")
 
         if len(df) < 30:
-            print(
-                "Not enough data to train reliably — re-run the simulator with more transactions."
-            )
+            print("Not enough data to train reliably â€” re-run the simulator with more transactions.")
             return
 
         model, feature_names, report, cm, auc = train_and_evaluate(df)
 
-        print(
-            "\nClassification report (5-fold cross-validated, out-of-fold predictions):"
-        )
+        print("\nClassification report (5-fold cross-validated, out-of-fold predictions):")
         print(report)
-        print(
-            "Confusion matrix (rows=actual, cols=predicted; [not_recovered, recovered]):"
-        )
+        print("Confusion matrix (rows=actual, cols=predicted; [not_recovered, recovered]):")
         print(cm)
         print(f"ROC-AUC: {auc:.3f}")
 
@@ -54,3 +47,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

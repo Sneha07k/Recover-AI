@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends
+﻿from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 
@@ -22,3 +22,4 @@ def health_check(db: Session = Depends(get_db)):
         "app": settings.APP_NAME,
         "environment": settings.ENVIRONMENT,
     }
+

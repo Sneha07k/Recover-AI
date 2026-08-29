@@ -1,9 +1,10 @@
-import logging
+﻿import logging
 
 from app.events.bus import event_bus
 from app.events.enums import EventType
 from app.events.schemas import Event
 from app.risk.engine import assess_risk_on_payment_failed
+from app.strategy.engine import recommend_strategy_on_payment_failed
 
 logger = logging.getLogger("recoverai.events")
 logging.basicConfig(level=logging.INFO, format="%(message)s")
@@ -24,3 +25,5 @@ def log_payment_failed(db, event: Event) -> None:
 def register_default_consumers() -> None:
     event_bus.subscribe(EventType.PAYMENT_FAILED, log_payment_failed)
     event_bus.subscribe(EventType.PAYMENT_FAILED, assess_risk_on_payment_failed)
+    event_bus.subscribe(EventType.PAYMENT_FAILED, recommend_strategy_on_payment_failed)
+

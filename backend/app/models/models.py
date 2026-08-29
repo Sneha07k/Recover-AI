@@ -1,20 +1,10 @@
-from datetime import datetime, timezone
+﻿from datetime import datetime, timezone
 
-from sqlalchemy import (
-    Column,
-    Integer,
-    String,
-    Float,
-    DateTime,
-    ForeignKey,
-    Enum,
-    JSON,
-    Boolean,
-)
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Enum, JSON, Boolean
 from sqlalchemy.orm import relationship
 
 from app.database import Base
-from app.models.enums import CustomerType, PaymentMethod, TransactionStatus, FailureType
+from app.models.enums import CustomerType, PaymentMethod, TransactionStatus, FailureType, RecoveryStrategy
 
 
 class Merchant(Base):
@@ -54,10 +44,9 @@ class Transaction(Base):
 
 class EventLog(Base):
     """
-    Persisted record of every event published on the event bus — the raw
+    Persisted record of every event published on the event bus â€” the raw
     material for the audit trail we build properly in Phase 10.
     """
-
     __tablename__ = "events"
 
     id = Column(Integer, primary_key=True)
@@ -74,7 +63,6 @@ class RiskAssessment(Base):
     how likely it was to fail, how much money is involved, how likely a
     recovery action is to succeed, and the combined priority score.
     """
-
     __tablename__ = "risk_assessments"
 
     id = Column(Integer, primary_key=True)
@@ -93,10 +81,9 @@ class RecoveryAttempt(Base):
     Records the outcome of a (simplified, unconditional) retry made on a
     failed transaction. This is the historical, labeled data we need to
     train the recovery-prediction model in Phase 5. failure_type is the
-    simulator's hidden ground truth — it must NEVER be used as a model
+    simulator's hidden ground truth â€” it must NEVER be used as a model
     feature, only to generate this training label.
     """
-
     __tablename__ = "recovery_attempts"
 
     id = Column(Integer, primary_key=True)
@@ -105,3 +92,45 @@ class RecoveryAttempt(Base):
     succeeded = Column(Boolean, nullable=False)
     amount_recovered = Column(Float, nullable=False, default=0.0)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
+class StrategyDecision(Base):
+    """
+    A recommended recovery strategy and the expected-value reasoning
+    behind it, for one failed transaction. Nothing is executed here â€”
+    this is a recommendation only. Phase 8 adds policy gating; Phase 9
+    wires in real execution.
+    """
+    __tablename__ = "strategy_decisions"
+
+    id = Column(Integer, primary_key=True)
+    transaction_id = Column(Integer, ForeignKey("transactions.id"), nullable=False)
+    customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False)
+    payment_method = Column(Enum(PaymentMethod), nullable=False)
+    amount = Column(Float, nullable=False)
+    strategy = Column(Enum(RecoveryStrategy), nullable=False)
+    estimated_probability = Column(Float, nullable=False)
+    cost = Column(Float, nullable=False)
+    expected_value = Column(Float, nullable=False)
+    reasoning = Column(String, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
+class AgentDecision(Base):
+    """
+    A recovery decision produced by the LLM agent for an AMBIGUOUS case
+    only (see app/agents/ambiguity.py) â€” most failures never reach this
+    table because Phase 6's deterministic engine already handles them.
+    This is still just a proposal: nothing is executed here either.
+    """
+    __tablename__ = "agent_decisions"
+
+    id = Column(Integer, primary_key=True)
+    transaction_id = Column(Integer, ForeignKey("transactions.id"), nullable=False)
+    customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False)
+    action = Column(Enum(RecoveryStrategy), nullable=False)
+    confidence = Column(Float, nullable=False)
+    reason = Column(String, nullable=False)
+    requires_approval = Column(Boolean, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+

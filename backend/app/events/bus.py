@@ -1,4 +1,4 @@
-from collections import defaultdict
+﻿from collections import defaultdict
 from typing import Callable
 
 from sqlalchemy.orm import Session
@@ -12,22 +12,18 @@ class EventBus:
     """
     A simple in-process publish/subscribe system. Producers call publish()
     with an Event; every function that has subscribe()'d to that event's
-    type gets called with it, along with the current db session.
+    type gets called with it.
 
-    We deliberately don't reach for Kafka/Redis here — a single Python
+    We deliberately don't reach for Kafka/Redis here â€” a single Python
     process handling a simulated event stream doesn't need a distributed
     message broker yet. If we ever run multiple processes, this class is
     the one place we'd swap out.
     """
 
     def __init__(self):
-        self._subscribers: dict[EventType, list[Callable[[Session, Event], None]]] = (
-            defaultdict(list)
-        )
+        self._subscribers: dict[EventType, list[Callable[[Session, Event], None]]] = defaultdict(list)
 
-    def subscribe(
-        self, event_type: EventType, handler: Callable[[Session, Event], None]
-    ) -> None:
+    def subscribe(self, event_type: EventType, handler: Callable[[Session, Event], None]) -> None:
         self._subscribers[event_type].append(handler)
 
     def publish(self, db: Session, event: Event) -> None:
@@ -47,6 +43,7 @@ class EventBus:
             handler(db, event)
 
 
-# Single shared instance — producers and consumers both import this same
+# Single shared instance â€” producers and consumers both import this same
 # object so they're all talking to the same bus.
 event_bus = EventBus()
+

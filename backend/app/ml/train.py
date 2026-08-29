@@ -1,11 +1,11 @@
-import pandas as pd
+﻿import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score
 from sklearn.model_selection import StratifiedKFold, cross_val_predict
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
-# Numeric features only — payment_method is categorical and gets one-hot
+# Numeric features only â€” payment_method is categorical and gets one-hot
 # encoded separately. Note failure_type is NOT here: it's the simulator's
 # hidden ground truth, never a legitimate feature.
 FEATURE_COLUMNS_NUMERIC = [
@@ -29,14 +29,14 @@ def prepare_features(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
 def train_and_evaluate(df: pd.DataFrame, n_splits: int = 5):
     """
     With only a few hundred labeled examples, one train/test split gives a
-    noisy performance estimate — try it twice with different random seeds
+    noisy performance estimate - try it twice with different random seeds
     and watch the numbers swing wildly. K-fold cross-validation fixes this:
     every example gets used as held-out test data exactly once (across
     n_splits folds), so we evaluate on far more predictions overall while
     still never letting a fold's own test rows influence its training.
 
     StandardScaler lives inside the Pipeline so it's refit separately on
-    each fold's training portion — otherwise fitting it once on all the
+    each fold's training portion - otherwise fitting it once on all the
     data first would leak each fold's test statistics into training.
     """
     X, y = prepare_features(df)
@@ -56,9 +56,10 @@ def train_and_evaluate(df: pd.DataFrame, n_splits: int = 5):
     cm = confusion_matrix(y, y_pred)
     auc = roc_auc_score(y, y_proba)
 
-    # Final model refit on ALL available data — this is the one we
+    # Final model refit on ALL available data - this is the one we
     # actually save and use, distinct from the fold models used only for
     # evaluation above.
     final_pipeline = pipeline.fit(X, y)
 
     return final_pipeline, X.columns.tolist(), report, cm, auc
+

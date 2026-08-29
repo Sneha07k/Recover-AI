@@ -1,4 +1,4 @@
-from collections import defaultdict
+﻿from collections import defaultdict
 
 import pandas as pd
 from sqlalchemy.orm import Session
@@ -98,3 +98,4 @@ def build_recovery_dataset(db: Session) -> pd.DataFrame:
                     method_recovery_success[method] += 1
 
     return pd.DataFrame(rows)
+

@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+﻿from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 from app.config import settings
@@ -18,25 +18,11 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 # which is what lets SQLAlchemy know to create a table for it.
 Base = declarative_base()
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
-
-from app.config import settings
-
-engine = create_engine(
-    settings.DATABASE_URL,
-    connect_args={"check_same_thread": False},
-)
-
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-Base = declarative_base()
-
 
 def init_db():
     """
     Creates all tables that have been defined via classes inheriting from
-    Base (see app/models/models.py). Safe to call repeatedly — it only
+    Base (see app/models/models.py). Safe to call repeatedly â€” it only
     creates tables that don't already exist.
     """
     from app.models import models  # noqa: F401 (import registers the tables)
@@ -54,5 +40,4 @@ def get_db():
         yield db
     finally:
         db.close()
-
 

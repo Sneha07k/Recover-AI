@@ -1,4 +1,4 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
+﻿from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -8,14 +8,14 @@ class Settings(BaseSettings):
     which we load from a .env file during development.
     """
 
-    model_config = SettingsConfigDict(env_file=".env")
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     APP_NAME: str = "RecoverAI"
     ENVIRONMENT: str = "development"
 
-    # SQLite file lives inside data/ so it's easy to find and .gitignore
     DATABASE_URL: str = "sqlite:///../data/recoverai.db"
 
+    GROQ_API_KEY: str = ""
 
-# Created once, imported everywhere else that needs config.
+
 settings = Settings()

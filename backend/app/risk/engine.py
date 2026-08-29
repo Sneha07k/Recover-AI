@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+﻿from sqlalchemy.orm import Session
 
 from app.events.schemas import Event
 from app.models.enums import PaymentMethod
@@ -13,7 +13,7 @@ from app.risk.scoring import (
 def assess_risk_on_payment_failed(db: Session, event: Event) -> RiskAssessment:
     """
     Consumer for PAYMENT_FAILED events. Computes a deterministic risk score
-    and persists it — the first real "brain" in the pipeline, even though
+    and persists it â€” the first real "brain" in the pipeline, even though
     no ML or LLM is involved yet.
     """
     transaction_id = event.entity_id
@@ -40,3 +40,4 @@ def assess_risk_on_payment_failed(db: Session, event: Event) -> RiskAssessment:
     db.commit()
     db.refresh(assessment)
     return assessment
+

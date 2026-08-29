@@ -1,11 +1,11 @@
-from sqlalchemy import func
+﻿from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.enums import PaymentMethod, TransactionStatus
 from app.models.models import Transaction
 
 # Rule-based estimate of how likely a failed payment is to be recoverable
-# if we intervene (e.g. retry). Deliberately simple for Phase 4 — Phase 5
+# if we intervene (e.g. retry). Deliberately simple for Phase 4 â€” Phase 5
 # replaces this with a real ML model trained on observed outcomes.
 RECOVERY_PROBABILITY_BY_METHOD = {
     PaymentMethod.UPI: 0.55,
@@ -21,12 +21,10 @@ MIN_SAMPLES_FOR_CUSTOMER_RATE = 5
 
 
 def historical_failure_rate_for_method(
-    db: Session,
-    payment_method: PaymentMethod,
-    exclude_transaction_id: int | None = None,
+    db: Session, payment_method: PaymentMethod, exclude_transaction_id: int | None = None
 ) -> float:
     """
-    Fraction of all past transactions on this payment method that failed —
+    Fraction of all past transactions on this payment method that failed â€”
     the population baseline we'd guess for a customer we know nothing about.
     """
     query = db.query(func.count(Transaction.id)).filter(
@@ -87,7 +85,7 @@ def estimate_failure_probability(
     """
     Blends the customer's own history with the payment method's population
     baseline. We deliberately do NOT read the simulator's hidden
-    `customer_type` field here — in a real system that field doesn't exist,
+    `customer_type` field here â€” in a real system that field doesn't exist,
     only observed behavior does. Reading it would be label leakage: the
     same mistake we must avoid with ML in Phase 5.
     """
@@ -113,11 +111,12 @@ def calculate_risk_score(
     """
     RecoverAI's core prioritization formula:
 
-        risk_score = failure_probability × amount × recovery_probability
+        risk_score = failure_probability Ã— amount Ã— recovery_probability
 
     This is NOT plain "expected loss" (that would omit recovery_probability).
-    It's "expected recoverable revenue" — a big, likely-recoverable failure
+    It's "expected recoverable revenue" â€” a big, likely-recoverable failure
     scores higher than an equally likely failure that's hard to recover,
     because the system's job is deciding where to spend intervention effort.
     """
     return failure_probability * amount * recovery_probability
+

@@ -1,4 +1,4 @@
-import random
+﻿import random
 
 import numpy as np
 from faker import Faker
@@ -47,7 +47,7 @@ CUSTOMER_TYPE_WEIGHTS = {
 }
 
 # Mean of the underlying normal distribution (log-space) for each customer
-# type's order amount. e.g. mean_log=7.0 -> typical amount around e^7 ≈ 1,100.
+# type's order amount. e.g. mean_log=7.0 -> typical amount around e^7 â‰ˆ 1,100.
 AMOUNT_MEAN_LOG = {
     CustomerType.RELIABLE: 7.0,
     CustomerType.OCCASIONAL_PAYER: 6.5,
@@ -60,7 +60,7 @@ AMOUNT_MEAN_LOG = {
 # Probability that a given failure is TRANSIENT (network blip, temporary
 # provider issue) rather than PERMANENT (card declined, blocked, expired).
 # This is the simulator's hidden ground truth for whether a retry would
-# actually work — it must never be exposed as a feature to any predictor.
+# actually work â€” it must never be exposed as a feature to any predictor.
 TRANSIENT_PROBABILITY_BY_METHOD = {
     PaymentMethod.UPI: 0.85,
     PaymentMethod.WALLET: 0.85,
@@ -70,7 +70,7 @@ TRANSIENT_PROBABILITY_BY_METHOD = {
 }
 
 # Additive adjustment to the transient probability based on customer
-# behavior — a FREQUENTLY_FAILS customer's failures skew more permanent
+# behavior â€” a FREQUENTLY_FAILS customer's failures skew more permanent
 # (e.g. genuinely blocked cards) rather than transient network issues.
 TRANSIENT_ADJUSTMENT_BY_CUSTOMER_TYPE = {
     CustomerType.RELIABLE: 0.05,
@@ -161,7 +161,7 @@ def generate_transactions(
         }
 
         # Every transaction announces its own lifecycle: created, then the
-        # outcome. Nothing downstream reads txn.status directly anymore —
+        # outcome. Nothing downstream reads txn.status directly anymore â€”
         # they react to these events instead.
         event_bus.publish(
             db,
@@ -175,9 +175,7 @@ def generate_transactions(
         event_bus.publish(
             db,
             Event(
-                event_type=(
-                    EventType.PAYMENT_FAILED if will_fail else EventType.PAYMENT_SUCCESS
-                ),
+                event_type=EventType.PAYMENT_FAILED if will_fail else EventType.PAYMENT_SUCCESS,
                 entity_type="transaction",
                 entity_id=txn.id,
                 payload=event_payload,
@@ -189,9 +187,7 @@ def generate_transactions(
             # attempt so we accumulate historical labeled data. Phases 6-9
             # replace this with a real bounded decision + policy-gated flow.
             transient_prob = TRANSIENT_PROBABILITY_BY_METHOD[payment_method]
-            transient_prob += TRANSIENT_ADJUSTMENT_BY_CUSTOMER_TYPE[
-                customer.customer_type
-            ]
+            transient_prob += TRANSIENT_ADJUSTMENT_BY_CUSTOMER_TYPE[customer.customer_type]
             transient_prob = min(max(transient_prob, 0.05), 0.95)
 
             failure_type = (
@@ -199,9 +195,7 @@ def generate_transactions(
                 if np.random.random() < transient_prob
                 else FailureType.PERMANENT
             )
-            recovery_success_prob = RECOVERY_SUCCESS_PROBABILITY_BY_FAILURE_TYPE[
-                failure_type
-            ]
+            recovery_success_prob = RECOVERY_SUCCESS_PROBABILITY_BY_FAILURE_TYPE[failure_type]
             recovered = np.random.random() < recovery_success_prob
 
             attempt = RecoveryAttempt(
@@ -225,17 +219,10 @@ def generate_transactions(
             event_bus.publish(
                 db,
                 Event(
-                    event_type=(
-                        EventType.RECOVERY_SUCCESS
-                        if recovered
-                        else EventType.RECOVERY_FAILED
-                    ),
+                    event_type=EventType.RECOVERY_SUCCESS if recovered else EventType.RECOVERY_FAILED,
                     entity_type="transaction",
                     entity_id=txn.id,
-                    payload={
-                        **event_payload,
-                        "amount_recovered": attempt.amount_recovered,
-                    },
+                    payload={**event_payload, "amount_recovered": attempt.amount_recovered},
                 ),
             )
 
@@ -257,3 +244,4 @@ def run_simulation(
     customers = generate_customers(db, merchant, num_customers)
     transactions = generate_transactions(db, customers, num_transactions)
     return merchant, customers, transactions
+

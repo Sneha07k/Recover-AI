@@ -1,4 +1,4 @@
-import enum
+﻿import enum
 
 
 class EventType(str, enum.Enum):
@@ -12,3 +12,4 @@ class EventType(str, enum.Enum):
     RECOVERY_ATTEMPTED = "recovery_attempted"
     RECOVERY_SUCCESS = "recovery_success"
     RECOVERY_FAILED = "recovery_failed"
+
