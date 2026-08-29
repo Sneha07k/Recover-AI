@@ -220,7 +220,21 @@ def evaluate_policy(
     checks = [_check_valid_action(strategy)]
 
     if checks[-1].verdict == DENY:
+        # No point checking anything else against an action that isn't
+        # even recognized.
         return PolicyResult(verdict=DENY, checks=checks)
+
+    if strategy == RecoveryStrategy.STOP:
+        # Doing nothing needs no authorization — this also means a
+        # high-value transaction where the deterministic engine or agent
+        # already decided not to act doesn't get flagged for human review
+        # just because of its amount. Only actions need approval.
+        checks.append(
+            CheckOutcome(
+                "stop_is_always_allowed", ALLOW, "No action is being taken; nothing to authorize."
+            )
+        )
+        return PolicyResult(verdict=ALLOW, checks=checks)
 
     customer = db.get(Customer, customer_id)
 

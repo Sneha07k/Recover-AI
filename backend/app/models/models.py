@@ -55,6 +55,12 @@ class Transaction(Base):
     amount = Column(Float, nullable=False)
     status = Column(Enum(TransactionStatus), nullable=False)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    # Whether this originally-failed transaction was later recovered via
+    # intervention, and how much came back. `status` never changes once
+    # set — it's a permanent historical fact — these two fields capture
+    # the separate, later outcome of recovery.
+    recovered = Column(Boolean, nullable=False, default=False)
+    recovered_amount = Column(Float, nullable=False, default=0.0)
 
     customer = relationship("Customer", back_populates="transactions")
 
@@ -89,6 +95,7 @@ class RecoveryAttempt(Base):
 
     id = Column(Integer, primary_key=True)
     transaction_id = Column(Integer, ForeignKey("transactions.id"), nullable=False)
+    strategy = Column(Enum(RecoveryStrategy), nullable=True)
     failure_type = Column(Enum(FailureType), nullable=False)
     succeeded = Column(Boolean, nullable=False)
     amount_recovered = Column(Float, nullable=False, default=0.0)
@@ -125,14 +132,6 @@ class AgentDecision(Base):
 
 
 class PolicyDecision(Base):
-    """
-    The Policy Engine's verdict on a proposed strategy — the one record
-    type in the whole system that represents actual authorization (or
-    refusal). Neither StrategyDecision nor AgentDecision have any power
-    to skip this; every proposal must be checked here before Phase 9 can
-    execute anything.
-    """
-
     __tablename__ = "policy_decisions"
 
     id = Column(Integer, primary_key=True)
@@ -140,6 +139,6 @@ class PolicyDecision(Base):
     customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False)
     strategy = Column(Enum(RecoveryStrategy), nullable=False)
     amount = Column(Float, nullable=False)
-    verdict = Column(String, nullable=False)  # "allow" / "deny" / "escalate"
+    verdict = Column(String, nullable=False)
     reasons = Column(JSON, nullable=False, default=list)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))

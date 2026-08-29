@@ -270,6 +270,22 @@ def test_deny_takes_precedence_over_escalate():
         db.close()
 
 
+def test_stop_is_always_allowed_even_for_high_value():
+    db = make_test_session()
+    try:
+        merchant = make_merchant(db)
+        customer = make_customer(db, merchant.id)
+        txn = make_transaction(db, customer.id, amount=30_000.0)
+
+        result = evaluate_policy(
+            db, customer.id, txn.id, RecoveryStrategy.STOP, 30_000.0
+        )
+
+        assert result.verdict == ALLOW
+    finally:
+        db.close()
+
+
 def test_agent_requested_approval_escalates():
     db = make_test_session()
     try:
