@@ -1,10 +1,26 @@
 ﻿from datetime import datetime, timezone
 
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Enum, JSON, Boolean
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    Float,
+    DateTime,
+    ForeignKey,
+    Enum,
+    JSON,
+    Boolean,
+)
 from sqlalchemy.orm import relationship
 
 from app.database import Base
-from app.models.enums import CustomerType, PaymentMethod, TransactionStatus, FailureType, RecoveryStrategy
+from app.models.enums import (
+    CustomerType,
+    PaymentMethod,
+    TransactionStatus,
+    FailureType,
+    RecoveryStrategy,
+)
 
 
 class Merchant(Base):
@@ -24,6 +40,7 @@ class Customer(Base):
     name = Column(String, nullable=False)
     email = Column(String, nullable=False)
     customer_type = Column(Enum(CustomerType), nullable=False)
+    opted_out = Column(Boolean, nullable=False, default=False)
 
     merchant = relationship("Merchant", back_populates="customers")
     transactions = relationship("Transaction", back_populates="customer")
@@ -43,10 +60,6 @@ class Transaction(Base):
 
 
 class EventLog(Base):
-    """
-    Persisted record of every event published on the event bus â€” the raw
-    material for the audit trail we build properly in Phase 10.
-    """
     __tablename__ = "events"
 
     id = Column(Integer, primary_key=True)
@@ -58,11 +71,6 @@ class EventLog(Base):
 
 
 class RiskAssessment(Base):
-    """
-    One deterministic risk assessment produced for a failed transaction:
-    how likely it was to fail, how much money is involved, how likely a
-    recovery action is to succeed, and the combined priority score.
-    """
     __tablename__ = "risk_assessments"
 
     id = Column(Integer, primary_key=True)
@@ -77,13 +85,6 @@ class RiskAssessment(Base):
 
 
 class RecoveryAttempt(Base):
-    """
-    Records the outcome of a (simplified, unconditional) retry made on a
-    failed transaction. This is the historical, labeled data we need to
-    train the recovery-prediction model in Phase 5. failure_type is the
-    simulator's hidden ground truth â€” it must NEVER be used as a model
-    feature, only to generate this training label.
-    """
     __tablename__ = "recovery_attempts"
 
     id = Column(Integer, primary_key=True)
@@ -95,12 +96,6 @@ class RecoveryAttempt(Base):
 
 
 class StrategyDecision(Base):
-    """
-    A recommended recovery strategy and the expected-value reasoning
-    behind it, for one failed transaction. Nothing is executed here â€”
-    this is a recommendation only. Phase 8 adds policy gating; Phase 9
-    wires in real execution.
-    """
     __tablename__ = "strategy_decisions"
 
     id = Column(Integer, primary_key=True)
@@ -117,12 +112,6 @@ class StrategyDecision(Base):
 
 
 class AgentDecision(Base):
-    """
-    A recovery decision produced by the LLM agent for an AMBIGUOUS case
-    only (see app/agents/ambiguity.py) â€” most failures never reach this
-    table because Phase 6's deterministic engine already handles them.
-    This is still just a proposal: nothing is executed here either.
-    """
     __tablename__ = "agent_decisions"
 
     id = Column(Integer, primary_key=True)
@@ -134,3 +123,23 @@ class AgentDecision(Base):
     requires_approval = Column(Boolean, nullable=False)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
+
+class PolicyDecision(Base):
+    """
+    The Policy Engine's verdict on a proposed strategy — the one record
+    type in the whole system that represents actual authorization (or
+    refusal). Neither StrategyDecision nor AgentDecision have any power
+    to skip this; every proposal must be checked here before Phase 9 can
+    execute anything.
+    """
+
+    __tablename__ = "policy_decisions"
+
+    id = Column(Integer, primary_key=True)
+    transaction_id = Column(Integer, ForeignKey("transactions.id"), nullable=False)
+    customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False)
+    strategy = Column(Enum(RecoveryStrategy), nullable=False)
+    amount = Column(Float, nullable=False)
+    verdict = Column(String, nullable=False)  # "allow" / "deny" / "escalate"
+    reasons = Column(JSON, nullable=False, default=list)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))

@@ -48,6 +48,9 @@ CUSTOMER_TYPE_WEIGHTS = {
 
 # Mean of the underlying normal distribution (log-space) for each customer
 # type's order amount. e.g. mean_log=7.0 -> typical amount around e^7 â‰ˆ 1,100.
+OPT_OUT_PROBABILITY = 0.05
+
+
 AMOUNT_MEAN_LOG = {
     CustomerType.RELIABLE: 7.0,
     CustomerType.OCCASIONAL_PAYER: 6.5,
@@ -109,6 +112,7 @@ def generate_customers(db: Session, merchant: Merchant, n: int) -> list[Customer
             name=fake.name(),
             email=fake.email(),
             customer_type=customer_type,
+            opted_out=random.random() < OPT_OUT_PROBABILITY,
         )
         db.add(customer)
         customers.append(customer)
@@ -244,4 +248,3 @@ def run_simulation(
     customers = generate_customers(db, merchant, num_customers)
     transactions = generate_transactions(db, customers, num_transactions)
     return merchant, customers, transactions
-
