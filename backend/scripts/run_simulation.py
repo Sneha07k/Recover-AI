@@ -4,18 +4,10 @@ Run with: python scripts/run_simulation.py [num_customers] [num_transactions]
 
 import sys
 
-from sqlalchemy import func
-
+from app.analytics.metrics import compute_metrics
 from app.database import SessionLocal, init_db
 from app.events.consumers import register_default_consumers
-from app.models.enums import TransactionStatus, RecoveryStrategy
-from app.models.models import (
-    EventLog,
-    PolicyDecision,
-    RecoveryAttempt,
-    RiskAssessment,
-    Transaction,
-)
+from app.models.models import RiskAssessment
 from app.simulator.generator import run_simulation
 
 
@@ -32,52 +24,29 @@ def main():
             db, num_customers=num_customers, num_transactions=num_transactions
         )
 
-        total_amount = sum(t.amount for t in transactions)
-        failed = [t for t in transactions if t.status == TransactionStatus.FAILED]
-        failed_amount = sum(t.amount for t in failed)
-        event_count = db.query(EventLog).count()
-
-        attempts = db.query(RecoveryAttempt).all()
-        successful = [a for a in attempts if a.succeeded]
-        failed_attempts = [a for a in attempts if not a.succeeded]
-        revenue_recovered = sum(a.amount_recovered for a in successful)
-
-        escalations = (
-            db.query(PolicyDecision)
-            .filter(PolicyDecision.verdict == "escalate")
-            .count()
-        )
-        stopped_by_policy = (
-            db.query(PolicyDecision).filter(PolicyDecision.verdict == "deny").count()
-        )
-        stopped_by_strategy = (
-            db.query(PolicyDecision)
-            .filter(PolicyDecision.strategy == RecoveryStrategy.STOP)
-            .count()
-        )
+        m = compute_metrics(db)
 
         print(f"Merchant:            {merchant.name}")
         print(f"Customers generated: {len(customers)}")
         print()
-        print(f"Transactions simulated:  {len(transactions):,}")
-        print(f"Revenue processed:       ₹{total_amount:,.2f}")
+        print(f"Transactions simulated:  {m.transactions_total:,}")
+        print(f"Revenue processed:       ₹{m.revenue_processed:,.2f}")
         print(
-            f"Revenue at risk:         ₹{failed_amount:,.2f} ({len(failed)} failed transactions)"
-        )
-        print(f"Events recorded:         {event_count:,}")
-        print()
-        print(f"Interventions attempted: {len(attempts):,}")
-        print(f"Successful recoveries:   {len(successful):,}")
-        print(f"Failed interventions:    {len(failed_attempts):,}")
-        print(f"Escalations:             {escalations:,}")
-        print(f"Stopped by policy:       {stopped_by_policy:,}")
-        print(
-            f"Stopped by strategy:     {stopped_by_strategy:,} (engine itself chose not to act)"
+            f"Revenue at risk:         ₹{m.revenue_at_risk:,.2f} ({m.transactions_failed} failed transactions)"
         )
         print()
-        print(f"Revenue recovered:       ₹{revenue_recovered:,.2f}")
-        if attempts:
-            print(f"Recovery rate:           {len(successful) / len(attempts):.1%}")
+        print(f"Interventions attempted: {m.interventions_attempted:,}")
+        print(f"Successful recoveries:   {m.successful_recoveries:,}")
+        print(f"Failed interventions:    {m.failed_interventions:,}")
+        print(f"Escalations:             {m.escalations:,}")
+        print(f"Stopped by policy:       {m.stopped_by_policy:,}")
+        print(
+            f"Stopped by strategy:     {m.stopped_by_strategy:,} (engine itself chose not to act)"
+        )
+        print()
+        print(f"Revenue recovered:       ₹{m.revenue_recovered:,.2f}")
+        if m.recovery_rate is not None:
+            print(f"Recovery rate:           {m.recovery_rate:.1%}")
 
         top_risks = (
             db.query(RiskAssessment)

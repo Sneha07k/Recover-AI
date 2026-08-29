@@ -1,4 +1,0 @@
-helrajlek
-akdfjalkkjk
-KeyboardInterrupt
-hello
