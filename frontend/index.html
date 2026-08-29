@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>RecoverAI — Revenue Recovery Controller</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --ink: #0F1720;
+    --panel: #16212C;
+    --panel-raised: #1C2A38;
+    --hairline: #2A3A48;
+    --text: #E8E3D8;
+    --muted: #8B96A3;
+    --gold: #C9A227;
+    --gold-dim: #6B5A1E;
+    --rust: #A8452E;
+    --rust-dim: #5C2A1F;
+    --teal: #3E7C7B;
+    --teal-dim: #244544;
+    --display: 'Fraunces', Georgia, serif;
+    --body: 'Inter', -apple-system, sans-serif;
+    --mono: 'IBM Plex Mono', 'SF Mono', monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+
+  body {
+    margin: 0;
+    background: var(--ink);
+    color: var(--text);
+    font-family: var(--body);
+    line-height: 1.5;
+  }
+
+  a { color: inherit; }
+
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 32px 24px 80px;
+  }
+
+  /* ---------- Header ---------- */
+  header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 40px;
+    border-bottom: 1px solid var(--hairline);
+    padding-bottom: 20px;
+  }
+
+  .wordmark {
+    font-family: var(--display);
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .wordmark span { color: var(--gold); }
+
+  .subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .status-pill {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    border: 1px solid var(--hairline);
+    padding: 6px 12px;
+    border-radius: 100px;
+  }
+  .status-pill .dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--gold);
+    margin-right: 6px;
+  }
+
+  /* ---------- Ledger line (hero) ---------- */
+  .ledger-line {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+
+  .ledger-stage {
+    flex: 1 1 200px;
+    padding: 20px 22px;
+    background: var(--panel);
+    border: 1px solid var(--hairline);
+  }
+  .ledger-stage + .ledger-stage { border-left: none; }
+  .ledger-stage:first-child { border-radius: 10px 0 0 10px; }
+  .ledger-stage:last-child { border-radius: 0 10px 10px 0; }
+
+  .ledger-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .ledger-amount {
+    font-family: var(--mono);
+    font-size: 26px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ledger-stage.processed .ledger-amount { color: var(--text); }
+  .ledger-stage.at-risk .ledger-amount { color: var(--rust); }
+  .ledger-stage.attempted .ledger-amount { color: var(--teal); }
+  .ledger-stage.recovered .ledger-amount { color: var(--gold); }
+
+  .ledger-arrow {
+    display: flex;
+    align-items: center;
+    padding: 0 6px;
+    color: var(--hairline);
+    font-size: 20px;
+  }
+
+  .secondary-stats {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 48px;
+    flex-wrap: wrap;
+  }
+  .chip {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--muted);
+    background: var(--panel);
+    border: 1px solid var(--hairline);
+    border-radius: 8px;
+    padding: 8px 14px;
+  }
+  .chip b { color: var(--text); font-weight: 500; }
+
+  /* ---------- Section headings ---------- */
+  h2 {
+    font-family: var(--display);
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 16px;
+    padding-top: 8px;
+  }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--gold);
+    margin-bottom: 6px;
+  }
+
+  /* ---------- Chart grid ---------- */
+  .chart-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 48px;
+  }
+  @media (max-width: 720px) { .chart-grid { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--hairline);
+    border-radius: 10px;
+    padding: 20px;
+  }
+  .card h3 {
+    font-family: var(--body);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 0 0 14px;
+  }
+  .card canvas { max-height: 220px; }
+
+  /* ---------- Transactions + detail ---------- */
+  .split {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 860px) { .split { grid-template-columns: 1fr; } }
+
+  .txn-list {
+    background: var(--panel);
+    border: 1px solid var(--hairline);
+    border-radius: 10px;
+    overflow: hidden;
+    max-height: 560px;
+    overflow-y: auto;
+  }
+  .txn-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--hairline);
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+  .txn-row:hover { background: var(--panel-raised); }
+  .txn-row.active { background: var(--panel-raised); border-left: 3px solid var(--gold); }
+  .txn-row .amt { color: var(--text); }
+  .txn-row .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+  .dot.recovered { background: var(--gold); }
+  .dot.unrecovered { background: var(--rust); }
+
+  .detail-panel {
+    background: var(--panel);
+    border: 1px solid var(--hairline);
+    border-radius: 10px;
+    padding: 24px;
+    min-height: 300px;
+  }
+  .detail-empty {
+    color: var(--muted);
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    min-height: 260px;
+    text-align: center;
+  }
+
+  .timeline { list-style: none; margin: 0; padding: 0; }
+  .timeline-step {
+    display: flex;
+    gap: 16px;
+    padding-bottom: 24px;
+    position: relative;
+  }
+  .timeline-step:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 32px;
+    bottom: 0;
+    width: 1px;
+    background: var(--hairline);
+  }
+  .step-num {
+    flex: none;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--panel-raised);
+    border: 1px solid var(--hairline);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--gold);
+  }
+  .step-body { flex: 1; }
+  .step-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+  .step-detail { font-size: 13px; color: var(--muted); line-height: 1.6; }
+  .step-detail .mono { font-family: var(--mono); color: var(--text); }
+  .verdict-tag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-left: 6px;
+  }
+  .verdict-tag.allow { background: var(--teal-dim); color: var(--teal); }
+  .verdict-tag.deny { background: var(--rust-dim); color: var(--rust); }
+  .verdict-tag.escalate { background: var(--gold-dim); color: var(--gold); }
+
+  footer {
+    margin-top: 60px;
+    color: var(--muted);
+    font-size: 12px;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <div class="wordmark">Recover<span>AI</span></div>
+      <div class="subtitle">Autonomous revenue recovery controller</div>
+    </div>
+    <div class="status-pill"><span class="dot"></span><span id="merchant-name">connecting…</span></div>
+  </header>
+
+  <div class="eyebrow">The ledger</div>
+  <div class="ledger-line" id="ledger-line">
+    <div class="ledger-stage processed">
+      <div class="ledger-label">Revenue processed</div>
+      <div class="ledger-amount" id="m-processed">—</div>
+    </div>
+    <div class="ledger-arrow">→</div>
+    <div class="ledger-stage at-risk">
+      <div class="ledger-label">At risk</div>
+      <div class="ledger-amount" id="m-at-risk">—</div>
+    </div>
+    <div class="ledger-arrow">→</div>
+    <div class="ledger-stage attempted">
+      <div class="ledger-label">Attempted</div>
+      <div class="ledger-amount" id="m-attempted">—</div>
+    </div>
+    <div class="ledger-arrow">→</div>
+    <div class="ledger-stage recovered">
+      <div class="ledger-label">Recovered</div>
+      <div class="ledger-amount" id="m-recovered">—</div>
+    </div>
+  </div>
+
+  <div class="secondary-stats">
+    <div class="chip">Recovery rate <b id="m-rate">—</b></div>
+    <div class="chip">Interventions <b id="m-interventions">—</b></div>
+    <div class="chip">Failed interventions <b id="m-failed">—</b></div>
+    <div class="chip">Escalations <b id="m-escalations">—</b></div>
+    <div class="chip">Stopped by policy <b id="m-stopped-policy">—</b></div>
+    <div class="chip">Stopped by strategy <b id="m-stopped-strategy">—</b></div>
+  </div>
+
+  <h2>Breakdown</h2>
+  <div class="chart-grid">
+    <div class="card">
+      <h3>Recovery by strategy</h3>
+      <canvas id="chart-strategy"></canvas>
+    </div>
+    <div class="card">
+      <h3>Recovery by payment method</h3>
+      <canvas id="chart-method"></canvas>
+    </div>
+    <div class="card">
+      <h3>Failure reasons (attempted cases only)</h3>
+      <canvas id="chart-reasons"></canvas>
+    </div>
+    <div class="card">
+      <h3>Policy verdicts</h3>
+      <canvas id="chart-policy"></canvas>
+    </div>
+  </div>
+
+  <h2>Transactions</h2>
+  <div class="split">
+    <div class="txn-list" id="txn-list">
+      <div class="txn-row"><span>Loading…</span></div>
+    </div>
+    <div class="detail-panel" id="detail-panel">
+      <div class="detail-empty">Select a failed transaction on the left<br>to see its full decision trail.</div>
+    </div>
+  </div>
+
+  <footer>RecoverAI &middot; local dashboard &middot; reads directly from the audit trail API</footer>
+</div>
+
+<script>
+const API_BASE = window.location.protocol === 'file:' ? 'http://127.0.0.1:8000' : '';
+
+async function getJSON(path) {
+  const res = await fetch(API_BASE + path);
+  if (!res.ok) throw new Error(`${path} -> ${res.status}`);
+  return res.json();
+}
+
+function formatINR(n) {
+  return '\u20b9' + Number(n).toLocaleString('en-IN', { maximumFractionDigits: 0 });
+}
+
+const CHART_COLORS = {
+  gold: '#C9A227', rust: '#A8452E', teal: '#3E7C7B',
+  muted: '#8B96A3', text: '#E8E3D8', grid: '#2A3A48',
+};
+
+Chart.defaults.color = CHART_COLORS.muted;
+Chart.defaults.font.family = "'IBM Plex Mono', monospace";
+Chart.defaults.font.size = 11;
+
+function baseBarOptions() {
+  return {
+    responsive: true,
+    plugins: { legend: { labels: { color: CHART_COLORS.muted } } },
+    scales: {
+      x: { grid: { color: CHART_COLORS.grid }, ticks: { color: CHART_COLORS.muted } },
+      y: { grid: { color: CHART_COLORS.grid }, ticks: { color: CHART_COLORS.muted }, beginAtZero: true },
+    },
+  };
+}
+
+async function loadMetrics() {
+  const m = await getJSON('/metrics');
+  document.getElementById('m-processed').textContent = formatINR(m.revenue_processed);
+  document.getElementById('m-at-risk').textContent = formatINR(m.revenue_at_risk);
+  document.getElementById('m-attempted').textContent = formatINR(m.revenue_attempted);
+  document.getElementById('m-recovered').textContent = formatINR(m.revenue_recovered);
+  document.getElementById('m-rate').textContent = m.recovery_rate != null ? (m.recovery_rate * 100).toFixed(1) + '%' : 'n/a';
+  document.getElementById('m-interventions').textContent = m.interventions_attempted;
+  document.getElementById('m-failed').textContent = m.failed_interventions;
+  document.getElementById('m-escalations').textContent = m.escalations;
+  document.getElementById('m-stopped-policy').textContent = m.stopped_by_policy;
+  document.getElementById('m-stopped-strategy').textContent = m.stopped_by_strategy;
+}
+
+async function loadStrategyChart() {
+  const data = await getJSON('/metrics/by-strategy');
+  new Chart(document.getElementById('chart-strategy'), {
+    type: 'bar',
+    data: {
+      labels: data.map(d => d.strategy),
+      datasets: [
+        { label: 'Attempted', data: data.map(d => d.attempted), backgroundColor: CHART_COLORS.teal },
+        { label: 'Succeeded', data: data.map(d => d.succeeded), backgroundColor: CHART_COLORS.gold },
+      ],
+    },
+    options: baseBarOptions(),
+  });
+}
+
+async function loadMethodChart() {
+  const data = await getJSON('/metrics/by-payment-method');
+  new Chart(document.getElementById('chart-method'), {
+    type: 'bar',
+    data: {
+      labels: data.map(d => d.payment_method),
+      datasets: [
+        { label: 'Failed', data: data.map(d => d.failed), backgroundColor: CHART_COLORS.rust },
+        { label: 'Recovered', data: data.map(d => d.recovered), backgroundColor: CHART_COLORS.gold },
+      ],
+    },
+    options: baseBarOptions(),
+  });
+}
+
+async function loadReasonsChart() {
+  const data = await getJSON('/metrics/failure-reasons');
+  new Chart(document.getElementById('chart-reasons'), {
+    type: 'doughnut',
+    data: {
+      labels: data.map(d => d.failure_type),
+      datasets: [{
+        data: data.map(d => d.count),
+        backgroundColor: [CHART_COLORS.teal, CHART_COLORS.rust],
+        borderColor: '#16212C',
+      }],
+    },
+    options: { plugins: { legend: { position: 'bottom', labels: { color: CHART_COLORS.muted } } } },
+  });
+}
+
+async function loadPolicyChart() {
+  const data = await getJSON('/metrics/policy-verdicts');
+  const colorFor = v => v === 'allow' ? CHART_COLORS.teal : v === 'deny' ? CHART_COLORS.rust : CHART_COLORS.gold;
+  new Chart(document.getElementById('chart-policy'), {
+    type: 'doughnut',
+    data: {
+      labels: data.map(d => d.verdict),
+      datasets: [{
+        data: data.map(d => d.count),
+        backgroundColor: data.map(d => colorFor(d.verdict)),
+        borderColor: '#16212C',
+      }],
+    },
+    options: { plugins: { legend: { position: 'bottom', labels: { color: CHART_COLORS.muted } } } },
+  });
+}
+
+async function loadTransactionList() {
+  const txns = await getJSON('/transactions?status=failed&limit=30');
+  const list = document.getElementById('txn-list');
+  list.innerHTML = '';
+  if (txns.length === 0) {
+    list.innerHTML = '<div class="txn-row"><span>No failed transactions yet.</span></div>';
+    return;
+  }
+  txns.forEach(t => {
+    const row = document.createElement('div');
+    row.className = 'txn-row';
+    row.dataset.id = t.id;
+    row.innerHTML = `
+      <span><span class="dot ${t.recovered ? 'recovered' : 'unrecovered'}"></span>#${t.id} &middot; ${t.payment_method}</span>
+      <span class="amt">${formatINR(t.amount)}</span>
+    `;
+    row.addEventListener('click', () => selectTransaction(t.id, row));
+    list.appendChild(row);
+  });
+}
+
+function stepHTML(num, title, detailHTML) {
+  return `
+    <li class="timeline-step">
+      <div class="step-num">${num}</div>
+      <div class="step-body">
+        <div class="step-title">${title}</div>
+        <div class="step-detail">${detailHTML}</div>
+      </div>
+    </li>
+  `;
+}
+
+async function selectTransaction(id, rowEl) {
+  document.querySelectorAll('.txn-row').forEach(r => r.classList.remove('active'));
+  if (rowEl) rowEl.classList.add('active');
+
+  const panel = document.getElementById('detail-panel');
+  panel.innerHTML = '<div class="detail-empty">Loading trail…</div>';
+
+  let entry;
+  try {
+    entry = await getJSON(`/audit-log/${id}`);
+  } catch (e) {
+    panel.innerHTML = '<div class="detail-empty">Could not load this transaction.</div>';
+    return;
+  }
+
+  const t = entry.transaction;
+  let steps = '';
+  let n = 1;
+
+  steps += stepHTML(n++, `Transaction #${t.id} failed`,
+    `<span class="mono">${formatINR(t.amount)}</span> via <span class="mono">${t.payment_method}</span>`);
+
+  if (entry.risk_assessment) {
+    const r = entry.risk_assessment;
+    steps += stepHTML(n++, 'Risk assessed',
+      `Failure probability <span class="mono">${(r.failure_probability * 100).toFixed(0)}%</span>, `
+      + `recovery probability <span class="mono">${(r.recovery_probability * 100).toFixed(0)}%</span>, `
+      + `risk score <span class="mono">${r.risk_score.toFixed(0)}</span>`);
+  }
+
+  if (entry.strategy_decision) {
+    const s = entry.strategy_decision;
+    steps += stepHTML(n++, 'Strategy recommended',
+      `<span class="mono">${s.strategy}</span> &mdash; expected value <span class="mono">${formatINR(s.expected_value)}</span><br>${s.reasoning}`);
+  }
+
+  if (entry.agent_decision) {
+    const a = entry.agent_decision;
+    steps += stepHTML(n++, 'Agent reviewed (ambiguous case)',
+      `Proposed <span class="mono">${a.action}</span>, confidence <span class="mono">${(a.confidence * 100).toFixed(0)}%</span><br>${a.reason}`);
+  }
+
+  if (entry.policy_decision) {
+    const p = entry.policy_decision;
+    steps += stepHTML(n++, 'Policy evaluated',
+      `<span class="verdict-tag ${p.verdict}">${p.verdict}</span>`
+      + (p.reasons.length ? '<br>' + p.reasons.join('<br>') : ''));
+  }
+
+  if (entry.recovery_attempt) {
+    const a = entry.recovery_attempt;
+    steps += stepHTML(n++, a.succeeded ? 'Recovery succeeded' : 'Recovery failed',
+      `Strategy <span class="mono">${a.strategy || 'n/a'}</span>, true failure type <span class="mono">${a.failure_type}</span><br>`
+      + (a.succeeded ? `Recovered <span class="mono">${formatINR(a.amount_recovered)}</span>` : 'No revenue recovered'));
+  } else {
+    steps += stepHTML(n++, 'No recovery attempt', 'This case was stopped or escalated before execution.');
+  }
+
+  panel.innerHTML = `<ul class="timeline">${steps}</ul>`;
+}
+
+async function init() {
+  try {
+    const m = await getJSON('/metrics');
+    document.getElementById('merchant-name').textContent = `${m.transactions_total.toLocaleString()} transactions`;
+  } catch (e) {
+    document.getElementById('merchant-name').textContent = 'API unreachable';
+  }
+  loadMetrics();
+  loadStrategyChart();
+  loadMethodChart();
+  loadReasonsChart();
+  loadPolicyChart();
+  loadTransactionList();
+}
+
+init();
+</script>
+</body>
+</html>

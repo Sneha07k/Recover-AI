@@ -1,4 +1,5 @@
 ﻿from fastapi import FastAPI, Depends
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 
@@ -10,6 +11,17 @@ from app.database import get_db
 
 app = FastAPI(title=settings.APP_NAME)
 
+# Dev-only: the dashboard (Phase 11) is a static HTML file with no
+# authentication, opened either directly from disk or from a different
+# local port than the API. Wide-open CORS is fine for a local buildathon
+# demo; this would need real origin restrictions before any deployment.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["GET"],
+    allow_headers=["*"],
+)
+
 app.include_router(transactions_router)
 app.include_router(audit_router)
 app.include_router(metrics_router)
@@ -17,12 +29,6 @@ app.include_router(metrics_router)
 
 @app.get("/health")
 def health_check(db: Session = Depends(get_db)):
-    """
-    Confirms the API is running AND the database connection actually works.
-    We run a trivial query rather than just returning {"status": "ok"} so
-    that a broken DB connection fails loudly here instead of surprising us
-    later in a real endpoint.
-    """
     db.execute(text("SELECT 1"))
     return {
         "status": "ok",
