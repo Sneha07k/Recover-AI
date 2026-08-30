@@ -17,5 +17,10 @@ class Settings(BaseSettings):
 
     GROQ_API_KEY: str = ""
 
+    # Required only for Phase 14's Razorpay integration. Must be TEST MODE
+    # keys (key_id starts with "rzp_test_") — never put live keys here.
+    RAZORPAY_KEY_ID: str = ""
+    RAZORPAY_KEY_SECRET: str = ""
+
 
 settings = Settings()

@@ -177,3 +177,26 @@ class ExperimentResult(Base):
     amount_recovered = Column(Float, nullable=False, default=0.0)
     cost = Column(Float, nullable=False, default=0.0)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
+class RazorpayPaymentLink(Base):
+    """
+    A REAL Razorpay test-mode Payment Link created for a customer-facing
+    recovery strategy (INCENTIVE, CUSTOMER_REMINDER). This is a verifiable
+    side-artifact only — RecoverAI's simulator (Phase 9) remains the sole
+    source of truth for whether the recovery succeeded. Nothing in this
+    table is ever read back to decide simulated outcomes.
+    """
+
+    __tablename__ = "razorpay_payment_links"
+
+    id = Column(Integer, primary_key=True)
+    transaction_id = Column(
+        Integer, ForeignKey("transactions.id"), nullable=False, index=True
+    )
+    strategy = Column(Enum(RecoveryStrategy), nullable=False)
+    amount_paise = Column(Integer, nullable=False)
+    razorpay_payment_link_id = Column(String, nullable=False)
+    short_url = Column(String, nullable=False)
+    status = Column(String, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
