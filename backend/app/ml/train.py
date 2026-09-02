@@ -4,6 +4,8 @@ from sklearn.metrics import classification_report, confusion_matrix, roc_auc_sco
 from sklearn.model_selection import StratifiedKFold, cross_val_predict
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
+from app.models.enums import PaymentMethod
+from app.risk.scoring import RECOVERY_PROBABILITY_BY_METHOD
 
 # Numeric features only â€” payment_method is categorical and gets one-hot
 # encoded separately. Note failure_type is NOT here: it's the simulator's
@@ -63,3 +65,18 @@ def train_and_evaluate(df: pd.DataFrame, n_splits: int = 5):
 
     return final_pipeline, X.columns.tolist(), report, cm, auc
 
+
+def compute_rule_based_baseline_auc(df: pd.DataFrame) -> float:
+    """
+    Scores every example using ONLY the Phase 4 rule-based estimate
+    (RECOVERY_PROBABILITY_BY_METHOD — a fixed number per payment method,
+    no learning at all), then measures its ROC-AUC against the actual
+    outcomes. This is what "no ML model" would have achieved, computed
+    live on the exact same data the trained model just saw — the direct,
+    honest comparison behind Phase 12's finding that the simple rule-based
+    fallback can match or beat the trained model.
+    """
+    scores = df["payment_method"].map(
+        lambda m: RECOVERY_PROBABILITY_BY_METHOD[PaymentMethod(m)]
+    )
+    return float(roc_auc_score(df["recovered"], scores))

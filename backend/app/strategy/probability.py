@@ -1,10 +1,10 @@
 ﻿import logging
 from functools import lru_cache
 from pathlib import Path
-from sqlalchemy import case, func
 
 import joblib
 import pandas as pd
+from sqlalchemy import case, func
 from sqlalchemy.orm import Session
 
 from app.models.enums import PaymentMethod
@@ -19,7 +19,9 @@ logger = logging.getLogger("recoverai.strategy")
 
 # backend/app/strategy/probability.py -> parents[3] is the project root,
 # where data/ lives alongside backend/.
-MODEL_PATH = Path(__file__).resolve().parents[3] / "data" / "models" / "recovery_model.pkl"
+MODEL_PATH = (
+    Path(__file__).resolve().parents[3] / "data" / "models" / "recovery_model.pkl"
+)
 
 
 @lru_cache(maxsize=1)
@@ -27,15 +29,30 @@ def _load_model():
     """
     Loads the trained recovery model once and caches it for the life of
     the process. Returns (None, None) if no model has been trained yet,
-    so callers fall back gracefully instead of crashing â€” the exact
+    so callers fall back gracefully instead of crashing — the exact
     situation a freshly deployed system would be in.
     """
     try:
         bundle = joblib.load(MODEL_PATH)
         return bundle["model"], bundle["feature_names"]
     except FileNotFoundError:
-        logger.info("No trained recovery model found at %s â€” using rule-based fallback.", MODEL_PATH)
+        logger.info(
+            "No trained recovery model found at %s — using rule-based fallback.",
+            MODEL_PATH,
+        )
         return None, None
+
+
+def invalidate_model_cache() -> None:
+    """
+    Clears the cache above. Only matters for a long-running server process
+    (e.g. the deployed API): without this, training a NEW model after the
+    server has already started (and already cached "no model exists")
+    would silently never take effect, since @lru_cache would never
+    re-run _load_model(). CLI scripts never hit this — each one is a
+    fresh process — but the web "Train Model" action needs it.
+    """
+    _load_model.cache_clear()
 
 
 def _recovery_counts(db: Session, filter_clause, exclude_transaction_id):
@@ -135,6 +152,9 @@ def predict_recovery_probability(
             ).astype(float)
             numeric = row.drop(columns=["payment_method"])
             X = pd.concat([numeric, method_dummies], axis=1)
+            # Align columns exactly to what the model was trained on. Any
+            # payment method missing from this single row (or one the
+            # model never saw) gets filled with 0 rather than crashing.
             X = X.reindex(columns=feature_names, fill_value=0.0)
             return float(model.predict_proba(X)[0, 1])
 

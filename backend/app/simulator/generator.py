@@ -52,7 +52,7 @@ def generate_customers(db: Session, merchant: Merchant, n: int) -> list[Customer
 
 
 def generate_transactions(
-    db: Session, customers: list[Customer], n: int, batch_size: int = 200
+    db: Session, customers: list[Customer], n: int, batch_size: int = 200, bus=None
 ) -> list[Transaction]:
     """
     Generates transactions and detects failures only. As of Phase 9, the
@@ -62,6 +62,13 @@ def generate_transactions(
     wired to PAYMENT_FAILED as an event consumer, not baked into this
     generation loop.
 
+    `bus` defaults to the shared global event_bus (unchanged behavior for
+    every existing caller). Pass a fresh, subscriber-free EventBus()
+    instance instead when generating an ISOLATED population — e.g. the
+    Phase 12 experiment harness — so the global closed-loop consumers
+    (if registered, as they are in the deployed web app) don't fire
+    against data that's supposed to stay independent of the live pipeline.
+
     Phase 13: commits happen every `batch_size` transactions instead of
     on every single event (which is what every downstream consumer used
     to do too — see app/events/bus.py). This is the batching change that
@@ -70,6 +77,7 @@ def generate_transactions(
     batch_size transactions' worth of events, risk assessments, strategy
     decisions, policy checks, and recovery attempts — is lost.
     """
+    active_bus = bus if bus is not None else event_bus
     methods = list(PaymentMethod)
 
     transactions = []
@@ -103,7 +111,7 @@ def generate_transactions(
             "customer_id": customer.id,
         }
 
-        event_bus.publish(
+        active_bus.publish(
             db,
             Event(
                 event_type=EventType.PAYMENT_CREATED,
@@ -112,7 +120,7 @@ def generate_transactions(
                 payload=event_payload,
             ),
         )
-        event_bus.publish(
+        active_bus.publish(
             db,
             Event(
                 event_type=(
@@ -141,9 +149,10 @@ def run_simulation(
     num_customers: int = 200,
     num_transactions: int = 1000,
     merchant_name: str = "Demo Merchant",
+    bus=None,
 ):
     """Generates one merchant, its customers, and its transaction stream."""
     merchant = create_merchant(db, name=merchant_name)
     customers = generate_customers(db, merchant, num_customers)
-    transactions = generate_transactions(db, customers, num_transactions)
+    transactions = generate_transactions(db, customers, num_transactions, bus=bus)
     return merchant, customers, transactions

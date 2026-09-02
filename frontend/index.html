@@ -48,7 +48,6 @@
     padding: 32px 24px 80px;
   }
 
-  /* ---------- Header ---------- */
   header {
     display: flex;
     align-items: baseline;
@@ -88,7 +87,49 @@
     margin-right: 6px;
   }
 
-  /* ---------- Ledger line (hero) ---------- */
+  .intro {
+    font-size: 15px;
+    color: var(--muted);
+    max-width: 760px;
+    margin-bottom: 28px;
+    line-height: 1.7;
+  }
+  .intro b { color: var(--text); font-weight: 600; }
+
+  .pipeline-strip {
+    display: flex;
+    align-items: stretch;
+    flex-wrap: wrap;
+    gap: 0;
+    margin-bottom: 40px;
+  }
+  .pipeline-step {
+    flex: 1 1 140px;
+    background: var(--panel);
+    border: 1px solid var(--hairline);
+    padding: 14px 16px;
+    position: relative;
+  }
+  .pipeline-step + .pipeline-step { border-left: none; }
+  .pipeline-step:first-child { border-radius: 10px 0 0 10px; }
+  .pipeline-step:last-child { border-radius: 0 10px 10px 0; }
+  .pipeline-step .pnum {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--gold);
+    margin-bottom: 4px;
+  }
+  .pipeline-step .plabel {
+    font-weight: 600;
+    font-size: 13px;
+    margin-bottom: 3px;
+  }
+  .pipeline-step .pdesc {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
   .ledger-line {
     display: flex;
     align-items: stretch;
@@ -138,7 +179,7 @@
   .secondary-stats {
     display: flex;
     gap: 12px;
-    margin-bottom: 48px;
+    margin-bottom: 40px;
     flex-wrap: wrap;
   }
   .chip {
@@ -152,7 +193,6 @@
   }
   .chip b { color: var(--text); font-weight: 500; }
 
-  /* ---------- Section headings ---------- */
   h2 {
     font-family: var(--display);
     font-size: 20px;
@@ -169,7 +209,110 @@
     margin-bottom: 6px;
   }
 
-  /* ---------- Chart grid ---------- */
+  .control-panel {
+    background: var(--panel);
+    border: 1px solid var(--hairline);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 48px;
+  }
+  .control-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+  .btn {
+    font-family: var(--body);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    background: var(--gold);
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .btn:hover { opacity: 0.88; }
+  .btn:disabled { opacity: 0.5; cursor: wait; }
+  .btn.secondary {
+    background: var(--panel-raised);
+    color: var(--text);
+    border: 1px solid var(--hairline);
+  }
+  .btn.danger {
+    background: var(--panel-raised);
+    color: var(--rust);
+    border: 1px solid var(--rust-dim);
+  }
+
+  .spinner {
+    display: inline-block;
+    width: 12px; height: 12px;
+    border: 2px solid rgba(0,0,0,0.25);
+    border-top-color: var(--ink);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin-right: 6px;
+    vertical-align: -1px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .action-result {
+    margin-top: 16px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .action-result:empty { margin-top: 0; }
+
+  .result-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--mono);
+    font-size: 12px;
+    margin-top: 10px;
+  }
+  .result-table th, .result-table td {
+    text-align: left;
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .result-table th {
+    color: var(--muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 0.05em;
+  }
+  .result-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+  .scenario-card {
+    background: var(--panel-raised);
+    border: 1px solid var(--hairline);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-top: 10px;
+  }
+  .scenario-card summary {
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text);
+    list-style: none;
+  }
+  .scenario-card summary::-webkit-details-marker { display: none; }
+  .scenario-card summary::before { content: '\25B8  '; color: var(--gold); }
+  .scenario-card[open] summary::before { content: '\25BE  '; }
+  .scenario-card .scenario-lines {
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.7;
+    white-space: pre-wrap;
+    font-family: var(--mono);
+  }
+
   .chart-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -195,7 +338,6 @@
   }
   .card canvas { max-height: 220px; }
 
-  /* ---------- Transactions + detail ---------- */
   .split {
     display: grid;
     grid-template-columns: 340px 1fr;
@@ -309,6 +451,59 @@
     <div class="status-pill"><span class="dot"></span><span id="merchant-name">connecting…</span></div>
   </header>
 
+  <p class="intro">
+    RecoverAI detects failed payments in a simulated merchant, <b>diagnoses</b> why each one
+    failed, <b>decides</b> on a bounded recovery action, checks that decision against a
+    <b>policy engine</b> neither the strategy engine nor an LLM agent can bypass, <b>executes</b>
+    it, and records the full <b>explainable trail</b> — end to end, autonomously. Everything below
+    is live: click any button in the control panel to run the real pipeline yourself.
+  </p>
+
+  <div class="pipeline-strip">
+    <div class="pipeline-step">
+      <div class="pnum">01</div>
+      <div class="plabel">Detect</div>
+      <div class="pdesc">Payment fails in the simulator</div>
+    </div>
+    <div class="pipeline-step">
+      <div class="pnum">02</div>
+      <div class="plabel">Diagnose</div>
+      <div class="pdesc">Risk score from historical rates</div>
+    </div>
+    <div class="pipeline-step">
+      <div class="pnum">03</div>
+      <div class="plabel">Decide</div>
+      <div class="pdesc">Expected-value strategy (or LLM agent if ambiguous)</div>
+    </div>
+    <div class="pipeline-step">
+      <div class="pnum">04</div>
+      <div class="plabel">Authorize</div>
+      <div class="pdesc">Deterministic policy: ALLOW / DENY / ESCALATE</div>
+    </div>
+    <div class="pipeline-step">
+      <div class="pnum">05</div>
+      <div class="plabel">Act</div>
+      <div class="pdesc">Only if allowed — real simulated outcome</div>
+    </div>
+    <div class="pipeline-step">
+      <div class="pnum">06</div>
+      <div class="plabel">Audit</div>
+      <div class="pdesc">Every step recorded, explainable</div>
+    </div>
+  </div>
+
+  <h2>Live control panel</h2>
+  <div class="control-panel">
+    <div class="control-buttons">
+      <button class="btn" id="btn-simulate">Run simulation (200 customers, 1,500 txns)</button>
+      <button class="btn secondary" id="btn-train">Train recovery model</button>
+      <button class="btn secondary" id="btn-experiment">Compare strategies (fair experiment)</button>
+      <button class="btn secondary" id="btn-failure-demo">Show failure handling</button>
+      <button class="btn danger" id="btn-reset">Reset demo data</button>
+    </div>
+    <div class="action-result" id="action-result"></div>
+  </div>
+
   <div class="eyebrow">The ledger</div>
   <div class="ledger-line" id="ledger-line">
     <div class="ledger-stage processed">
@@ -371,7 +566,7 @@
     </div>
   </div>
 
-  <footer>RecoverAI &middot; local dashboard &middot; reads directly from the audit trail API</footer>
+  <footer>RecoverAI &middot; live dashboard &middot; reads directly from the audit trail API</footer>
 </div>
 
 <script>
@@ -379,6 +574,13 @@ const API_BASE = window.location.protocol === 'file:' ? 'http://127.0.0.1:8000' 
 
 async function getJSON(path) {
   const res = await fetch(API_BASE + path);
+  if (!res.ok) throw new Error(`${path} -> ${res.status}`);
+  return res.json();
+}
+
+async function postJSON(path, params) {
+  const qs = params ? '?' + new URLSearchParams(params).toString() : '';
+  const res = await fetch(API_BASE + path + qs, { method: 'POST' });
   if (!res.ok) throw new Error(`${path} -> ${res.status}`);
   return res.json();
 }
@@ -419,11 +621,15 @@ async function loadMetrics() {
   document.getElementById('m-escalations').textContent = m.escalations;
   document.getElementById('m-stopped-policy').textContent = m.stopped_by_policy;
   document.getElementById('m-stopped-strategy').textContent = m.stopped_by_strategy;
+  return m;
 }
+
+let strategyChart = null, methodChart = null, reasonsChart = null, policyChart = null;
 
 async function loadStrategyChart() {
   const data = await getJSON('/metrics/by-strategy');
-  new Chart(document.getElementById('chart-strategy'), {
+  if (strategyChart) strategyChart.destroy();
+  strategyChart = new Chart(document.getElementById('chart-strategy'), {
     type: 'bar',
     data: {
       labels: data.map(d => d.strategy),
@@ -438,7 +644,8 @@ async function loadStrategyChart() {
 
 async function loadMethodChart() {
   const data = await getJSON('/metrics/by-payment-method');
-  new Chart(document.getElementById('chart-method'), {
+  if (methodChart) methodChart.destroy();
+  methodChart = new Chart(document.getElementById('chart-method'), {
     type: 'bar',
     data: {
       labels: data.map(d => d.payment_method),
@@ -453,7 +660,8 @@ async function loadMethodChart() {
 
 async function loadReasonsChart() {
   const data = await getJSON('/metrics/failure-reasons');
-  new Chart(document.getElementById('chart-reasons'), {
+  if (reasonsChart) reasonsChart.destroy();
+  reasonsChart = new Chart(document.getElementById('chart-reasons'), {
     type: 'doughnut',
     data: {
       labels: data.map(d => d.failure_type),
@@ -470,7 +678,8 @@ async function loadReasonsChart() {
 async function loadPolicyChart() {
   const data = await getJSON('/metrics/policy-verdicts');
   const colorFor = v => v === 'allow' ? CHART_COLORS.teal : v === 'deny' ? CHART_COLORS.rust : CHART_COLORS.gold;
-  new Chart(document.getElementById('chart-policy'), {
+  if (policyChart) policyChart.destroy();
+  policyChart = new Chart(document.getElementById('chart-policy'), {
     type: 'doughnut',
     data: {
       labels: data.map(d => d.verdict),
@@ -578,19 +787,117 @@ async function selectTransaction(id, rowEl) {
   panel.innerHTML = `<ul class="timeline">${steps}</ul>`;
 }
 
+async function refreshDashboard() {
+  const m = await loadMetrics();
+  document.getElementById('merchant-name').textContent = `${m.transactions_total.toLocaleString()} transactions`;
+  await Promise.all([loadStrategyChart(), loadMethodChart(), loadReasonsChart(), loadPolicyChart(), loadTransactionList()]);
+  document.getElementById('detail-panel').innerHTML =
+    '<div class="detail-empty">Select a failed transaction on the left<br>to see its full decision trail.</div>';
+}
+
+function setButtonsDisabled(disabled) {
+  document.querySelectorAll('.control-buttons .btn').forEach(b => b.disabled = disabled);
+}
+
+function showResult(html) {
+  document.getElementById('action-result').innerHTML = html;
+}
+
+async function withLoading(button, loadingLabel, fn) {
+  setButtonsDisabled(true);
+  const originalLabel = button.textContent;
+  button.innerHTML = `<span class="spinner"></span>${loadingLabel}`;
+  try {
+    await fn();
+  } catch (e) {
+    showResult(`<span style="color: var(--rust)">Error: ${e.message}</span>`);
+  } finally {
+    setButtonsDisabled(false);
+    button.textContent = originalLabel;
+  }
+}
+
+document.getElementById('btn-simulate').addEventListener('click', async (e) => {
+  await withLoading(e.currentTarget, 'Simulating…', async () => {
+    const result = await postJSON('/actions/simulate', { num_customers: 200, num_transactions: 1500 });
+    showResult(
+      `Generated ${result.transactions_generated.toLocaleString()} new transactions for ` +
+      `${result.customers_generated.toLocaleString()} customers. Dashboard updated below.`
+    );
+    await refreshDashboard();
+  });
+});
+
+document.getElementById('btn-train').addEventListener('click', async (e) => {
+  await withLoading(e.currentTarget, 'Training…', async () => {
+    const result = await postJSON('/actions/train-model', {});
+    if (!result.trained) {
+      showResult(`Not trained: ${result.reason}`);
+      return;
+    }
+    showResult(`
+      <div><b style="color: var(--text)">Model trained</b> on ${result.dataset_size} labeled examples
+      (${(result.recovered_fraction * 100).toFixed(1)}% recovered).</div>
+      <div>ROC-AUC: <b style="color: var(--text)">${result.roc_auc.toFixed(3)}</b></div>
+      <div>Confusion matrix (rows=actual, cols=predicted): ${JSON.stringify(result.confusion_matrix)}</div>
+      <div style="margin-top:6px">The next simulation run will use this trained model instead of the rule-based fallback.</div>
+    `);
+  });
+});
+
+document.getElementById('btn-experiment').addEventListener('click', async (e) => {
+  await withLoading(e.currentTarget, 'Running experiment…', async () => {
+    const result = await postJSON('/actions/experiment', { num_customers: 300, num_transactions: 3000, seed: 42 });
+    let rows = '';
+    result.conditions.forEach(c => {
+      const rate = c.recovery_rate != null ? (c.recovery_rate * 100).toFixed(1) + '%' : 'n/a';
+      rows += `<tr>
+        <td>${c.condition}</td>
+        <td class="num">${c.interventions}</td>
+        <td class="num">${c.successful}</td>
+        <td class="num">${rate}</td>
+        <td class="num">${formatINR(c.revenue_recovered)}</td>
+      </tr>`;
+    });
+    showResult(`
+      <div>Fair comparison across ${result.total_failed} failed transactions (same population, same underlying randomness per transaction — see app/experiments/harness.py for why this is a valid comparison).</div>
+      <table class="result-table">
+        <thead><tr><th>Condition</th><th>Interventions</th><th>Recovered</th><th>Rate</th><th>Revenue recovered</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `);
+  });
+});
+
+document.getElementById('btn-failure-demo').addEventListener('click', async (e) => {
+  await withLoading(e.currentTarget, 'Running scenarios…', async () => {
+    const result = await postJSON('/actions/failure-demo', {});
+    let cards = '';
+    result.scenarios.forEach((s, i) => {
+      cards += `<details class="scenario-card" ${i === 0 ? 'open' : ''}>
+        <summary>${s.title}</summary>
+        <div class="scenario-lines">${s.lines.join('\n')}</div>
+      </details>`;
+    });
+    showResult(`<div>Five deliberate scenarios proving RecoverAI fails safely — bounded, explainable, auditable, never silent.</div>${cards}`);
+  });
+});
+
+document.getElementById('btn-reset').addEventListener('click', async (e) => {
+  if (!confirm('This clears all simulation data. Continue?')) return;
+  await withLoading(e.currentTarget, 'Resetting…', async () => {
+    await postJSON('/actions/reset', {});
+    showResult('Demo data cleared. Click "Run simulation" to generate a fresh population.');
+    await refreshDashboard();
+  });
+});
+
 async function init() {
   try {
-    const m = await getJSON('/metrics');
-    document.getElementById('merchant-name').textContent = `${m.transactions_total.toLocaleString()} transactions`;
+    await refreshDashboard();
   } catch (e) {
     document.getElementById('merchant-name').textContent = 'API unreachable';
   }
-  loadMetrics();
-  loadStrategyChart();
-  loadMethodChart();
-  loadReasonsChart();
-  loadPolicyChart();
-  loadTransactionList();
 }
 
 init();
