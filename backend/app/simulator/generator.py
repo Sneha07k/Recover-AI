@@ -1,5 +1,4 @@
-﻿import random
-
+import random
 import numpy as np
 from faker import Faker
 from sqlalchemy.orm import Session
@@ -9,6 +8,8 @@ from app.events.enums import EventType
 from app.events.schemas import Event
 from app.models.enums import PaymentMethod, TransactionStatus
 from app.models.models import Merchant, Customer, Transaction
+from app.simulator import chaos
+
 from app.simulator.ground_truth import (
     AMOUNT_MEAN_LOG,
     BASE_FAILURE_PROBABILITY,
@@ -52,7 +53,12 @@ def generate_customers(db: Session, merchant: Merchant, n: int) -> list[Customer
 
 
 def generate_transactions(
-    db: Session, customers: list[Customer], n: int, batch_size: int = 200, bus=None
+    db: Session,
+    customers: list[Customer],
+    n: int,
+    batch_size: int = 200,
+    bus=None,
+    fixed_payment_method: PaymentMethod | None = None,
 ) -> list[Transaction]:
     """
     Generates transactions and detects failures only. As of Phase 9, the
@@ -83,13 +89,15 @@ def generate_transactions(
     transactions = []
     for i in range(n):
         customer = random.choice(customers)
-        payment_method = random.choice(methods)
+        payment_method = fixed_payment_method if fixed_payment_method is not None else random.choice(methods)
 
         mean_log = AMOUNT_MEAN_LOG[customer.customer_type]
         amount = float(np.random.lognormal(mean=mean_log, sigma=0.6))
         amount = round(min(amount, 200_000), 2)
 
-        fail_prob = BASE_FAILURE_PROBABILITY[payment_method]
+        fail_prob = chaos.get_base_failure_probability_override(payment_method)
+        if fail_prob is None:
+            fail_prob = BASE_FAILURE_PROBABILITY[payment_method]
         fail_prob *= CUSTOMER_FAILURE_MULTIPLIER[customer.customer_type]
         fail_prob = min(fail_prob, 0.95)
 

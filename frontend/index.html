@@ -130,6 +130,254 @@
     line-height: 1.4;
   }
 
+  /* ---------- Engineering depth section ---------- */
+  .capability-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+    margin-bottom: 48px;
+  }
+  .capability-card {
+    background: var(--panel);
+    border: 1px solid var(--hairline);
+    border-radius: 10px;
+    padding: 18px 20px;
+  }
+  .capability-card .cap-title {
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .capability-card .cap-desc {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  .capability-card ul {
+    margin: 8px 0 0;
+    padding-left: 16px;
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+  .status-pill-sm {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 100px;
+    white-space: nowrap;
+  }
+  .status-pill-sm.on { background: var(--teal-dim); color: var(--teal); }
+  .status-pill-sm.off { background: var(--panel-raised); color: var(--muted); border: 1px solid var(--hairline); }
+  .cap-metric {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--gold);
+    margin-top: 8px;
+  }
+
+  /* ---------- Try your own scenario ---------- */
+  .scenario-form {
+    background: var(--panel);
+    border: 1px solid var(--hairline);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  .form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  .form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1 1 160px;
+  }
+  .form-field label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+  }
+  .form-field input, .form-field select {
+    font-family: var(--body);
+    font-size: 13px;
+    color: var(--text);
+    background: var(--panel-raised);
+    border: 1px solid var(--hairline);
+    border-radius: 6px;
+    padding: 8px 10px;
+  }
+  .form-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .form-checkbox input { width: 15px; height: 15px; }
+
+  .scenario-output {
+    margin-top: 16px;
+  }
+  .candidate-bar-row {
+    display: grid;
+    grid-template-columns: 140px 1fr 90px;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--mono);
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+  .candidate-bar-track {
+    background: var(--panel-raised);
+    border-radius: 4px;
+    height: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .candidate-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+  }
+  .candidate-bar-row.winner .candidate-bar-fill { background: var(--gold); }
+  .candidate-bar-row:not(.winner) .candidate-bar-fill { background: var(--teal); opacity: 0.6; }
+  .agent-trace-step {
+    border-left: 2px solid var(--hairline);
+    padding-left: 12px;
+    margin: 8px 0;
+    font-size: 11px;
+    color: var(--muted);
+    font-family: var(--mono);
+  }
+
+  /* ---------- Escalation queue ---------- */
+  .escalation-card {
+    background: var(--panel);
+    border: 1px solid var(--gold-dim);
+    border-left: 3px solid var(--gold);
+    border-radius: 8px;
+    padding: 16px 18px;
+    margin-bottom: 12px;
+  }
+  .escalation-card .esc-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+  }
+  .escalation-card .esc-amount {
+    font-family: var(--mono);
+    font-size: 18px;
+    color: var(--gold);
+  }
+  .escalation-card .esc-meta {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .escalation-card .esc-reasons {
+    font-size: 12px;
+    color: var(--muted);
+    margin: 8px 0;
+    line-height: 1.6;
+  }
+  .escalation-card .esc-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .btn-approve {
+    background: var(--teal);
+    color: var(--ink);
+    border: none;
+    border-radius: 6px;
+    padding: 7px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-deny {
+    background: var(--panel-raised);
+    color: var(--rust);
+    border: 1px solid var(--rust-dim);
+    border-radius: 6px;
+    padding: 7px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .esc-empty {
+    color: var(--muted);
+    font-size: 13px;
+    padding: 20px;
+    text-align: center;
+  }
+  .esc-resolved-tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 100px;
+  }
+  .esc-resolved-tag.approved { background: var(--teal-dim); color: var(--teal); }
+  .esc-resolved-tag.denied { background: var(--rust-dim); color: var(--rust); }
+
+  /* ---------- Chaos mode / provider degradation ---------- */
+  .chaos-panel {
+    background: var(--panel);
+    border: 1px solid var(--rust-dim);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  .chaos-compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 16px;
+  }
+  @media (max-width: 720px) { .chaos-compare { grid-template-columns: 1fr; } }
+  .chaos-col {
+    border-radius: 8px;
+    padding: 16px;
+  }
+  .chaos-col.before { background: var(--panel-raised); border: 1px solid var(--hairline); }
+  .chaos-col.during { background: var(--panel-raised); border: 1px solid var(--rust-dim); }
+  .chaos-col-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  .chaos-col.during .chaos-col-title { color: var(--rust); }
+  .chaos-stat {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .chaos-stat .label { color: var(--muted); }
+  .chaos-narrative {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--hairline);
+    font-size: 13px;
+    line-height: 1.8;
+  }
+  .chaos-narrative li { margin-bottom: 4px; }
+
   .ledger-line {
     display: flex;
     align-items: stretch;
@@ -492,6 +740,170 @@
     </div>
   </div>
 
+  <h2>What's actually running under the hood</h2>
+  <div class="capability-grid">
+    <div class="capability-card">
+      <div class="cap-title">Deterministic risk engine</div>
+      <div class="cap-desc">
+        Every failure is scored <span class="mono" style="color:var(--text)">risk_score = failure_probability × amount × recovery_probability</span>,
+        blending payment-method and customer-level historical rates — no ML needed here, and none used.
+      </div>
+    </div>
+
+    <div class="capability-card">
+      <div class="cap-title">ML recovery model</div>
+      <div class="cap-desc">
+        Logistic regression, 5-fold cross-validated, never sees the simulator's hidden
+        ground-truth label (no leakage). Click <b style="color:var(--text)">Train recovery model</b> below
+        to see it evaluated live against a rule-based baseline — including when the simple
+        baseline wins, reported honestly either way.
+      </div>
+      <div class="cap-metric" id="cap-ml-result">Not yet trained this session</div>
+    </div>
+
+    <div class="capability-card">
+      <div class="cap-title">Expected-value strategy engine</div>
+      <div class="cap-desc">
+        7 candidate actions compared by expected value every time. <span class="mono" style="color:var(--text)">STOP</span>
+        is always available at exactly ₹0 EV — a structural guarantee the engine can never
+        recommend a money-losing action.
+      </div>
+    </div>
+
+    <div class="capability-card">
+      <div class="cap-title">
+        LLM agent (Groq)
+        <span class="status-pill-sm off" id="status-groq">checking…</span>
+      </div>
+      <div class="cap-desc">
+        Tool-calling agent invoked <i>only</i> for genuinely ambiguous cases (close expected
+        values, or high-value transactions) — never in the bulk automatic pipeline, by design.
+        4 read-only tools plus one structured decision-submission tool.
+      </div>
+    </div>
+
+    <div class="capability-card">
+      <div class="cap-title">Deterministic policy engine</div>
+      <div class="cap-desc">
+        8 independent guardrail checks — valid action, customer opt-out, retry limit,
+        discount limit, intervention frequency, high-value threshold, automated amount
+        limit, agent-requested approval — combined with strict
+        <span class="mono" style="color:var(--text)">DENY &gt; ESCALATE &gt; ALLOW</span> precedence.
+        Neither the strategy engine nor the LLM agent can bypass it.
+      </div>
+    </div>
+
+    <div class="capability-card">
+      <div class="cap-title">Fair experimentation</div>
+      <div class="cap-desc">
+        Every condition compared against the <i>same</i> transaction using the <i>same</i>
+        random seed, so a strategy's higher success rate reflects real decision quality —
+        not luck. Click <b style="color:var(--text)">Compare strategies</b> below to run it.
+      </div>
+    </div>
+
+    <div class="capability-card">
+      <div class="cap-title">Performance engineering</div>
+      <div class="cap-desc">
+        Database indexing, batched commits, and SQL-side aggregation replaced per-event
+        commits and full-table scans — a measured 7x speedup, near-linear scaling past
+        20,000 transactions.
+      </div>
+      <div class="cap-metric" id="cap-perf-result">Not yet measured this session</div>
+    </div>
+
+    <div class="capability-card">
+      <div class="cap-title">
+        Real Razorpay integration
+        <span class="status-pill-sm off" id="status-razorpay">checking…</span>
+      </div>
+      <div class="cap-desc">
+        Genuine test-mode Payment Links API calls (not mocked), restricted to
+        customer-facing strategies only — the simulator remains the sole source of
+        truth for whether recovery actually succeeded.
+      </div>
+    </div>
+  </div>
+
+  <h2>⚠️ Chaos mode <span style="font-size:12px; color:var(--muted); font-weight:400">— simulate a real provider outage</span></h2>
+  <div class="chaos-panel">
+    <div style="font-size:13px; color:var(--muted); margin-bottom:14px">
+      Temporarily degrades ONE payment provider's real success odds, generates a
+      "before" batch and a "during" batch through the full closed loop, and shows
+      exactly what shifted. Chaos mode only changes ground truth (app/simulator/chaos.py) —
+      the risk engine, strategy engine, and policy engine never see it. Everything
+      below is emergent, computed from real observed data, the same way a real
+      production system would have to detect a real outage.
+    </div>
+    <div class="form-row">
+      <div class="form-field">
+        <label>Payment method to degrade</label>
+        <select id="chaos-method">
+          <option value="upi" selected>UPI</option>
+          <option value="credit_card">Credit card</option>
+          <option value="debit_card">Debit card</option>
+          <option value="net_banking">Net banking</option>
+          <option value="wallet">Wallet</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Batch size (each phase)</label>
+        <input type="number" id="chaos-batch-size" value="250" min="50" max="1000" step="50">
+      </div>
+    </div>
+    <button class="btn" id="btn-chaos-demo" style="background:var(--rust); color:var(--text)">Run outage simulation</button>
+    <div id="chaos-output"></div>
+  </div>
+
+  <h2>Try your own scenario</h2>
+  <div class="scenario-form">
+    <div class="form-row">
+      <div class="form-field">
+        <label>Amount (₹)</label>
+        <input type="number" id="ts-amount" value="15000" min="1" max="500000" step="100">
+      </div>
+      <div class="form-field">
+        <label>Payment method</label>
+        <select id="ts-payment-method">
+          <option value="upi">UPI</option>
+          <option value="credit_card" selected>Credit card</option>
+          <option value="debit_card">Debit card</option>
+          <option value="net_banking">Net banking</option>
+          <option value="wallet">Wallet</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Customer profile</label>
+        <select id="ts-customer-type">
+          <option value="reliable">Reliable</option>
+          <option value="occasional_payer">Occasional payer</option>
+          <option value="price_sensitive">Price sensitive</option>
+          <option value="high_value">High value</option>
+          <option value="frequently_fails" selected>Frequently fails</option>
+          <option value="subscription_heavy">Subscription heavy</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="form-checkbox"><input type="checkbox" id="ts-opted-out"> Customer has opted out of recovery communications</label>
+      <label class="form-checkbox"><input type="checkbox" id="ts-use-agent"> Consult the real Groq LLM agent for this case</label>
+    </div>
+    <button class="btn" id="btn-try-scenario">Run through the pipeline</button>
+    <div class="scenario-output" id="scenario-output"></div>
+  </div>
+
+  <h2>Escalation queue <span style="font-size:12px; color:var(--muted); font-weight:400">— cases waiting on a human</span></h2>
+  <div class="scenario-form" style="margin-bottom:48px">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
+      <div style="font-size:12px; color:var(--muted)">
+        Every case the policy engine flagged <span class="verdict-tag escalate">escalate</span> and no one has acted on yet.
+        Approving actually executes the recovery; denying does not.
+      </div>
+      <button class="btn secondary" id="btn-refresh-escalations" style="flex:none">Refresh</button>
+    </div>
+    <div id="escalation-list"><div class="esc-empty">Loading…</div></div>
+  </div>
+
   <h2>Live control panel</h2>
   <div class="control-panel">
     <div class="control-buttons">
@@ -787,10 +1199,69 @@ async function selectTransaction(id, rowEl) {
   panel.innerHTML = `<ul class="timeline">${steps}</ul>`;
 }
 
+async function loadEscalationQueue() {
+  const list = document.getElementById('escalation-list');
+  try {
+    const escalations = await getJSON('/escalations?status=pending&limit=20');
+    if (escalations.length === 0) {
+      list.innerHTML = '<div class="esc-empty">No cases currently waiting on a human.</div>';
+      return;
+    }
+    let html = '';
+    escalations.forEach(e => {
+      html += `
+        <div class="escalation-card" data-id="${e.id}">
+          <div class="esc-header">
+            <div>Transaction #${e.transaction_id} &middot; <span class="esc-meta">${e.customer_type} customer, ${e.payment_method}</span></div>
+            <div class="esc-amount">${formatINR(e.amount)}</div>
+          </div>
+          <div class="esc-meta">Proposed strategy: <b style="color:var(--text)">${e.strategy}</b></div>
+          <div class="esc-reasons">${e.reasons.join('<br>')}</div>
+          <div class="esc-actions">
+            <button class="btn-approve" data-action="approve" data-id="${e.id}">Approve &amp; execute</button>
+            <button class="btn-deny" data-action="deny" data-id="${e.id}">Deny</button>
+          </div>
+          <div class="esc-result" id="esc-result-${e.id}"></div>
+        </div>
+      `;
+    });
+    list.innerHTML = html;
+
+    list.querySelectorAll('button[data-action]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.id;
+        const action = btn.dataset.action;
+        const card = list.querySelector(`.escalation-card[data-id="${id}"]`);
+        card.querySelectorAll('button').forEach(b => b.disabled = true);
+        try {
+          const result = await postJSON(`/escalations/${id}/${action}`, {});
+          const resultEl = document.getElementById(`esc-result-${id}`);
+          if (action === 'approve') {
+            resultEl.innerHTML = result.executed
+              ? `<span class="esc-resolved-tag approved">approved</span> executed — ${result.succeeded ? 'recovered ' + formatINR(result.amount_recovered) : 'did not recover'}`
+              : `<span class="esc-resolved-tag approved">approved</span> ${result.note || ''}`;
+          } else {
+            resultEl.innerHTML = `<span class="esc-resolved-tag denied">denied</span> no action taken`;
+          }
+          card.querySelector('.esc-actions').remove();
+          await refreshDashboard();
+        } catch (e) {
+          document.getElementById(`esc-result-${id}`).innerHTML =
+            `<span style="color:var(--rust)">Error: ${e.message}</span>`;
+        }
+      });
+    });
+  } catch (e) {
+    list.innerHTML = `<div class="esc-empty" style="color:var(--rust)">Could not load escalation queue.</div>`;
+  }
+}
+
+document.getElementById('btn-refresh-escalations').addEventListener('click', loadEscalationQueue);
+
 async function refreshDashboard() {
   const m = await loadMetrics();
   document.getElementById('merchant-name').textContent = `${m.transactions_total.toLocaleString()} transactions`;
-  await Promise.all([loadStrategyChart(), loadMethodChart(), loadReasonsChart(), loadPolicyChart(), loadTransactionList()]);
+  await Promise.all([loadStrategyChart(), loadMethodChart(), loadReasonsChart(), loadPolicyChart(), loadTransactionList(), loadEscalationQueue()]);
   document.getElementById('detail-panel').innerHTML =
     '<div class="detail-empty">Select a failed transaction on the left<br>to see its full decision trail.</div>';
 }
@@ -803,14 +1274,23 @@ function showResult(html) {
   document.getElementById('action-result').innerHTML = html;
 }
 
-async function withLoading(button, loadingLabel, fn) {
+async function withLoading(button, loadingLabel, fn, outputElementId = 'action-result') {
   setButtonsDisabled(true);
   const originalLabel = button.textContent;
   button.innerHTML = `<span class="spinner"></span>${loadingLabel}`;
   try {
     await fn();
   } catch (e) {
-    showResult(`<span style="color: var(--rust)">Error: ${e.message}</span>`);
+    // BUG FIX: this used to always call showResult(), which hardcodes
+    // #action-result (the Live Control Panel's own output area). Any
+    // error from Chaos Mode, Try Your Own Scenario, etc. was silently
+    // rendered in the WRONG part of the page — looking exactly like
+    // "nothing happened" when something actually did fail (e.g. an
+    // out-of-range input rejected by the API with a 422).
+    const target = document.getElementById(outputElementId);
+    if (target) {
+      target.innerHTML = `<span style="color: var(--rust)">Error: ${e.message}</span>`;
+    }
   } finally {
     setButtonsDisabled(false);
     button.textContent = originalLabel;
@@ -822,8 +1302,13 @@ document.getElementById('btn-simulate').addEventListener('click', async (e) => {
     const result = await postJSON('/actions/simulate', { num_customers: 200, num_transactions: 1500 });
     showResult(
       `Generated ${result.transactions_generated.toLocaleString()} new transactions for ` +
-      `${result.customers_generated.toLocaleString()} customers. Dashboard updated below.`
+      `${result.customers_generated.toLocaleString()} customers through the full closed loop ` +
+      `in <b style="color: var(--text)">${result.elapsed_seconds}s</b> ` +
+      `(<b style="color: var(--text)">${result.transactions_per_second}</b> transactions/sec — ` +
+      `this is what Phase 13's indexing and batched-commit work actually bought). Dashboard updated below.`
     );
+    document.getElementById('cap-perf-result').textContent =
+      `Last run: ${result.transactions_generated.toLocaleString()} txns in ${result.elapsed_seconds}s (${result.transactions_per_second}/sec)`;
     await refreshDashboard();
   });
 });
@@ -838,10 +1323,14 @@ document.getElementById('btn-train').addEventListener('click', async (e) => {
     showResult(`
       <div><b style="color: var(--text)">Model trained</b> on ${result.dataset_size} labeled examples
       (${(result.recovered_fraction * 100).toFixed(1)}% recovered).</div>
-      <div>ROC-AUC: <b style="color: var(--text)">${result.roc_auc.toFixed(3)}</b></div>
-      <div>Confusion matrix (rows=actual, cols=predicted): ${JSON.stringify(result.confusion_matrix)}</div>
+      <div style="margin-top:6px">ML model ROC-AUC: <b style="color: var(--gold)">${result.roc_auc.toFixed(3)}</b>
+      &nbsp;vs.&nbsp; rule-based baseline ROC-AUC: <b style="color: var(--teal)">${result.baseline_auc.toFixed(3)}</b></div>
+      <div style="margin-top:4px">${result.verdict}</div>
+      <div style="margin-top:6px">Confusion matrix (rows=actual, cols=predicted): ${JSON.stringify(result.confusion_matrix)}</div>
       <div style="margin-top:6px">The next simulation run will use this trained model instead of the rule-based fallback.</div>
     `);
+    document.getElementById('cap-ml-result').textContent =
+      `ML AUC ${result.roc_auc.toFixed(3)} vs. baseline ${result.baseline_auc.toFixed(3)}`;
   });
 });
 
@@ -892,12 +1381,162 @@ document.getElementById('btn-reset').addEventListener('click', async (e) => {
   });
 });
 
+async function loadSystemStatus() {
+  try {
+    const s = await getJSON('/system/status');
+    const groqEl = document.getElementById('status-groq');
+    groqEl.textContent = s.groq_configured ? 'configured' : 'not configured';
+    groqEl.className = 'status-pill-sm ' + (s.groq_configured ? 'on' : 'off');
+
+    const rzpEl = document.getElementById('status-razorpay');
+    rzpEl.textContent = s.razorpay_configured ? 'configured' : 'not configured';
+    rzpEl.className = 'status-pill-sm ' + (s.razorpay_configured ? 'on' : 'off');
+  } catch (e) {
+    // Non-critical — leave the pills at their default state.
+  }
+}
+
+document.getElementById('btn-chaos-demo').addEventListener('click', async (e) => {
+  await withLoading(e.currentTarget, 'Simulating outage…', async () => {
+    const method = document.getElementById('chaos-method').value;
+    const batchSize = Number(document.getElementById('chaos-batch-size').value);
+    const out = document.getElementById('chaos-output');
+
+    // Matches the API's actual constraints (Query(..., ge=20, le=2000) in
+    // app/api/actions.py) — validated here too so an out-of-range value
+    // gets an immediate, clear message instead of a round-trip 422 whose
+    // error used to render in the wrong part of the page entirely.
+    if (batchSize < 20 || batchSize > 2000) {
+      out.innerHTML = `<div style="color: var(--rust); margin-top:12px">Batch size must be between 20 and 2000 (got ${batchSize}).</div>`;
+      return;
+    }
+
+    const result = await postJSON('/actions/chaos-demo', {
+      payment_method: method, batch_size: batchSize,
+    });
+
+    if (result.error) {
+      out.innerHTML = `<div style="color: var(--rust); margin-top:12px">${result.error}</div>`;
+      return;
+    }
+
+    const pct = v => (v * 100).toFixed(1) + '%';
+    const rate = v => v == null ? 'n/a' : pct(v);
+
+    out.innerHTML = `
+      <div class="chaos-compare">
+        <div class="chaos-col before">
+          <div class="chaos-col-title">Before (normal conditions)</div>
+          <div class="chaos-stat"><span class="label">Failure rate</span><span>${pct(result.before.failure_rate)}</span></div>
+          <div class="chaos-stat"><span class="label">Recovery rate</span><span>${rate(result.before.recovery_rate)}</span></div>
+          <div class="chaos-stat"><span class="label">Top strategy</span><span>${result.before.top_strategy || '—'}</span></div>
+          <div class="chaos-stat"><span class="label">Policy denials</span><span>${result.before.policy_denied}</span></div>
+          <div class="chaos-stat"><span class="label">Revenue recovered</span><span>${formatINR(result.before.revenue_recovered)}</span></div>
+        </div>
+        <div class="chaos-col during">
+          <div class="chaos-col-title">During (${result.payment_method} degraded)</div>
+          <div class="chaos-stat"><span class="label">Failure rate</span><span>${pct(result.during.failure_rate)}</span></div>
+          <div class="chaos-stat"><span class="label">Recovery rate</span><span>${rate(result.during.recovery_rate)}</span></div>
+          <div class="chaos-stat"><span class="label">Top strategy</span><span>${result.during.top_strategy || '—'}</span></div>
+          <div class="chaos-stat"><span class="label">Policy denials</span><span>${result.during.policy_denied}</span></div>
+          <div class="chaos-stat"><span class="label">Revenue recovered</span><span>${formatINR(result.during.revenue_recovered)}</span></div>
+        </div>
+      </div>
+      <div class="chaos-narrative">
+        <ul style="margin:0; padding-left:18px">
+          ${result.narrative.map(n => `<li>${n}</li>`).join('')}
+        </ul>
+      </div>
+    `;
+    await refreshDashboard();
+  }, 'chaos-output');
+});
+
+document.getElementById('btn-try-scenario').addEventListener('click', async (e) => {
+  const button = e.currentTarget;
+  await withLoading(button, 'Running…', async () => {
+    const amount = document.getElementById('ts-amount').value;
+    const paymentMethod = document.getElementById('ts-payment-method').value;
+    const customerType = document.getElementById('ts-customer-type').value;
+    const optedOut = document.getElementById('ts-opted-out').checked;
+    const useAgent = document.getElementById('ts-use-agent').checked;
+
+    const result = await postJSON('/actions/try-scenario', {
+      amount, payment_method: paymentMethod, customer_type: customerType,
+      opted_out: optedOut, use_agent: useAgent,
+    });
+
+    const out = document.getElementById('scenario-output');
+
+    if (result.error) {
+      out.innerHTML = `<div style="color: var(--rust)">${result.error}</div>`;
+      return;
+    }
+
+    // Expected-value candidate bars, winner highlighted.
+    const maxEv = Math.max(...result.candidates.map(c => Math.max(c.expected_value, 0)), 1);
+    let bars = '';
+    result.candidates.forEach(c => {
+      const isWinner = c.strategy === result.recommended_strategy;
+      const widthPct = Math.max((c.expected_value / maxEv) * 100, 2);
+      bars += `<div class="candidate-bar-row ${isWinner ? 'winner' : ''}">
+        <div>${c.strategy}</div>
+        <div class="candidate-bar-track"><div class="candidate-bar-fill" style="width:${widthPct}%"></div></div>
+        <div style="text-align:right">${formatINR(c.expected_value)}</div>
+      </div>`;
+    });
+
+    const verdictClass = result.policy_verdict; // allow / deny / escalate
+    let agentHTML = '';
+    if (result.agent) {
+      if (result.agent.error) {
+        agentHTML = `<div style="margin-top:14px; color: var(--muted)">Agent: ${result.agent.error}</div>`;
+      } else {
+        let traceHTML = '';
+        (result.agent.trace || []).forEach(t => {
+          traceHTML += `<div class="agent-trace-step">called <b style="color:var(--text)">${t.tool}</b>(${JSON.stringify(t.input)}) &rarr; ${JSON.stringify(t.output)}</div>`;
+        });
+        agentHTML = `
+          <div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--hairline)">
+            <div style="font-weight:600; color: var(--text); margin-bottom:6px">Groq agent consultation (real API call)</div>
+            ${traceHTML}
+            <div style="margin-top:6px">Proposed: <b style="color: var(--text)">${result.agent.action}</b>
+            (confidence ${(result.agent.confidence * 100).toFixed(0)}%)</div>
+            <div>${result.agent.reason}</div>
+          </div>
+        `;
+      }
+    }
+
+    out.innerHTML = `
+      <div style="margin-bottom:12px">
+        Failure probability <b style="color:var(--text)">${(result.risk.failure_probability * 100).toFixed(1)}%</b>
+        &nbsp;·&nbsp; Risk score <b style="color:var(--text)">${result.risk.risk_score.toFixed(0)}</b>
+      </div>
+      <div style="margin-bottom:8px; color: var(--muted); font-size:12px">Expected value by strategy:</div>
+      ${bars}
+      <div style="margin-top:12px">${result.reasoning}</div>
+      ${agentHTML}
+      <div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--hairline)">
+        Final check on <b style="color:var(--text)">${result.final_strategy_checked}</b>:
+        <span class="verdict-tag ${verdictClass}">${result.policy_verdict}</span>
+        ${result.policy_reasons.length ? '<div style="margin-top:6px">' + result.policy_reasons.join('<br>') + '</div>' : ''}
+      </div>
+      <div style="margin-top:10px; font-size:11px; color: var(--muted)">
+        This transaction (#${result.transaction_id}) is now visible in the list below — no recovery was actually executed, only decided and authorized.
+      </div>
+    `;
+    await refreshDashboard();
+  }, 'scenario-output');
+});
+
 async function init() {
   try {
     await refreshDashboard();
   } catch (e) {
     document.getElementById('merchant-name').textContent = 'API unreachable';
   }
+  loadSystemStatus();
 }
 
 init();

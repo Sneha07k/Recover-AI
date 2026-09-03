@@ -16,6 +16,7 @@ from app.config import settings
 from app.database import SessionLocal, get_db, init_db
 from app.events.consumers import register_default_consumers
 from app.models.models import Transaction
+from app.api.escalations import router as escalations_router
 
 # Absolute, computed from THIS file's location — not relative to whatever
 # directory the process happens to be launched from. A relative path here
@@ -71,6 +72,7 @@ app.include_router(transactions_router)
 app.include_router(audit_router)
 app.include_router(metrics_router)
 app.include_router(actions_router)
+app.include_router(escalations_router)
 
 
 @app.get("/health")

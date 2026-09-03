@@ -157,7 +157,12 @@ class PolicyDecision(Base):
     )
     strategy = Column(Enum(RecoveryStrategy), nullable=False, index=True)
     amount = Column(Float, nullable=False)
-    verdict = Column(String, nullable=False)
+    verdict = Column(String, nullable=False)  # "allow" / "deny" / "escalate"
+    # Only meaningful when verdict == "escalate". None means still pending
+    # human review — see app/api/escalations.py's approve/deny endpoints,
+    # which are the only code that ever sets these.
+    human_resolution = Column(String, nullable=True)  # "approved" / "denied" / None
+    resolved_at = Column(DateTime, nullable=True)
     reasons = Column(JSON, nullable=False, default=list)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 

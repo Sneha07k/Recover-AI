@@ -1,5 +1,6 @@
 import numpy as np
 from sqlalchemy.orm import Session
+from app.simulator import chaos
 
 from app.events.bus import event_bus
 from app.events.enums import EventType
@@ -33,7 +34,10 @@ def execute_strategy(
     the closed-loop controller enforces that; this function does not
     re-check policy itself.
     """
-    transient_prob = TRANSIENT_PROBABILITY_BY_METHOD[transaction.payment_method]
+
+    transient_prob = chaos.get_transient_probability_override(transaction.payment_method)
+    if transient_prob is None:
+        transient_prob = TRANSIENT_PROBABILITY_BY_METHOD[transaction.payment_method]
     transient_prob += TRANSIENT_ADJUSTMENT_BY_CUSTOMER_TYPE[customer.customer_type]
     transient_prob = min(max(transient_prob, 0.05), 0.95)
     failure_type = (
