@@ -1,10 +1,3 @@
-"""
-Reusable "set up a fresh population and run the comparison" glue,
-extracted from scripts/run_experiment.py so both the CLI script and the
-web API's /actions/experiment endpoint call the exact same code path.
-No logic changed from the original script - only moved.
-"""
-
 import random
 
 import numpy as np
@@ -27,23 +20,14 @@ EXPERIMENT_DB_URL = "sqlite:///../data/experiment.db"
 def run_experiment_end_to_end(
     num_customers: int = 300, num_transactions: int = 3000, seed: int = 42
 ) -> dict:
-    """
-    Uses a dedicated database file, separate from the live simulation's
-    database - this experiment's PAYMENT_FAILED events are never processed
-    by the closed-loop consumers, since the harness itself decides and
-    simulates outcomes once per condition.
-
-    Returns a plain dict (JSON-serializable) so this can be reused by both
-    the CLI script (which formats it as a table) and the API (which
-    returns it directly).
-    """
+    
     random.seed(seed)
     np.random.seed(seed)
 
     engine = create_engine(EXPERIMENT_DB_URL, connect_args={"check_same_thread": False})
-    from app.models import models  # noqa: F401 registers tables on Base
+    from app.models import models  
 
-    Base.metadata.drop_all(bind=engine)  # start clean each run, for reproducibility
+    Base.metadata.drop_all(bind=engine)  
     Base.metadata.create_all(bind=engine)
     Session = sessionmaker(bind=engine)
     db = Session()
@@ -51,10 +35,7 @@ def run_experiment_end_to_end(
     try:
         merchant = create_merchant(db)
         customers = generate_customers(db, merchant, num_customers)
-        # A fresh EventBus with no subscribers, so this isolated population
-        # never triggers the deployed app's global closed-loop consumers
-        # (which would otherwise silently execute their own strategy on
-        # each transaction before the harness gets a chance to).
+        
         isolated_bus = EventBus()
         transactions = generate_transactions(
             db, customers, num_transactions, bus=isolated_bus

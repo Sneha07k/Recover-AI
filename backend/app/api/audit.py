@@ -45,12 +45,7 @@ def list_audit_log(
     limit: int = Query(20, ge=1, le=100),
     db: Session = Depends(get_db),
 ):
-    """
-    One entry per transaction that has gone through the closed loop, most
-    recently processed first — the full explainable decision trail for
-    each. Anchored on PolicyDecision because every processed failure gets
-    exactly one (Phase 8/9), making it a reliable "one row per case" index.
-    """
+    
     policy_decisions = (
         db.query(PolicyDecision)
         .order_by(PolicyDecision.id.desc())

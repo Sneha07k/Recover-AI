@@ -33,23 +33,7 @@ def run_closed_loop(
     amount: float,
     use_agent_for_ambiguous: bool = False,
 ) -> dict:
-    """
-    The full closed loop for one failed transaction:
-        diagnose/predict (Phase 4/6 already ran as separate consumers)
-        -> decide (deterministic, or agent for ambiguous cases)
-        -> policy (Phase 8, authoritative)
-        -> act (Phase 9, only if ALLOWed and not STOP/ESCALATION)
-        -> observe (recorded by the executor)
-
-    use_agent_for_ambiguous defaults to False in the automatic pipeline —
-    a real LLM call per ambiguous case is too slow/costly to run
-    automatically across a bulk simulation (see Phase 7). Set it True only
-    for small, deliberate runs where the real agent should participate.
-    """
-    # Phase 13: compute the recommendation ONCE and reuse it for both
-    # persistence and the ambiguity check below — Phase 9 originally
-    # computed this twice (once via a persisting wrapper, once standalone
-    # for the candidate list), a known inefficiency now fixed.
+    
     recommendation = recommend_strategy(
         db, transaction_id, customer_id, payment_method, amount
     )

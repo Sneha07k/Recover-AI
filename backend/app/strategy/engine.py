@@ -27,11 +27,7 @@ def recommend_strategy(
     amount: float,
     force_rule_based: bool = False,
 ) -> StrategyRecommendation:
-    """
-    Computes expected value for every candidate strategy and returns the
-    best one. STOP is always included with expected_value == 0, which
-    guarantees the result never has negative expected value.
-    """
+    
     base_probability = predict_recovery_probability(
         db,
         customer_id,
@@ -81,13 +77,7 @@ def persist_strategy_decision(
     amount: float,
     recommendation: StrategyRecommendation,
 ) -> StrategyDecision:
-    """
-    Persists an ALREADY-COMPUTED recommendation. Split out from
-    recommend_strategy_on_payment_failed (Phase 13) so the closed-loop
-    controller can compute the recommendation once and reuse it for both
-    persistence and the ambiguity check, instead of computing it twice —
-    a real, measurable inefficiency flagged back in Phase 9.
-    """
+    
     decision = StrategyDecision(
         transaction_id=transaction_id,
         customer_id=customer_id,
@@ -106,12 +96,7 @@ def persist_strategy_decision(
 
 
 def recommend_strategy_on_payment_failed(db: Session, event: Event) -> StrategyDecision:
-    """
-    Consumer for PAYMENT_FAILED events. Computes and persists the
-    recommended strategy. NOTE: nothing is executed here — no retry
-    actually happens, no money moves. Phase 8 adds the policy gate;
-    Phase 9 wires in real execution.
-    """
+   
     transaction_id = event.entity_id
     customer_id = event.payload["customer_id"]
     payment_method = PaymentMethod(event.payload["payment_method"])

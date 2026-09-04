@@ -31,7 +31,7 @@ def make_test_session():
     engine = create_engine(
         "sqlite:///:memory:", connect_args={"check_same_thread": False}
     )
-    from app.models import models  # noqa: F401
+    from app.models import models 
 
     Base.metadata.create_all(bind=engine)
     Session = sessionmaker(bind=engine)
@@ -75,9 +75,6 @@ def make_transaction(db, customer_id, amount=500.0, payment_method=PaymentMethod
     return txn
 
 
-# ---------------------------------------------------------------------
-# categorize_outcome
-# ---------------------------------------------------------------------
 
 
 def test_categorize_stop_strategy_regardless_of_verdict():
@@ -99,10 +96,6 @@ def test_categorize_deny_is_stopped_by_policy():
 def test_categorize_allow_retry_is_executed():
     assert categorize_outcome(RecoveryStrategy.RETRY, ALLOW) == EXECUTED
 
-
-# ---------------------------------------------------------------------
-# execute_strategy
-# ---------------------------------------------------------------------
 
 
 def test_execute_strategy_persists_recovery_attempt_with_strategy():
@@ -147,11 +140,6 @@ def test_execute_strategy_updates_transaction_when_successful():
 
 
 def test_execute_strategy_incentive_recovers_discounted_amount():
-    """
-    INCENTIVE has amount_multiplier=0.90, so a successful incentive
-    recovery should recover 90% of the original amount, never the full
-    amount.
-    """
     db = make_test_session()
     try:
         merchant = make_merchant(db)
@@ -178,10 +166,6 @@ def test_execute_strategy_incentive_recovers_discounted_amount():
     finally:
         db.close()
 
-
-# ---------------------------------------------------------------------
-# run_closed_loop (integration)
-# ---------------------------------------------------------------------
 
 
 def test_closed_loop_denies_when_retry_limit_already_hit():

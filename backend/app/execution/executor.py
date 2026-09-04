@@ -21,19 +21,7 @@ def execute_strategy(
     customer: Customer,
     strategy: RecoveryStrategy,
 ) -> RecoveryAttempt:
-    """
-    The ONLY function in the system that simulates a real-world recovery
-    outcome and mutates transaction state. This plays the role of
-    "reality" — it's allowed to use the customer's true behavioral type,
-    exactly like the transaction generator does. Everything upstream
-    (risk engine, ML model, strategy engine, agent) only ever sees
-    observable history, never this.
-
-    This function should only ever be called after the Policy Engine
-    (Phase 8) has returned ALLOW for a non-STOP, non-ESCALATION strategy —
-    the closed-loop controller enforces that; this function does not
-    re-check policy itself.
-    """
+   
 
     transient_prob = chaos.get_transient_probability_override(transaction.payment_method)
     if transient_prob is None:

@@ -14,7 +14,7 @@ def make_test_session():
     engine = create_engine(
         "sqlite:///:memory:", connect_args={"check_same_thread": False}
     )
-    from app.models import models  # noqa: F401 registers tables on Base
+    from app.models import models  
 
     Base.metadata.create_all(bind=engine)
     Session = sessionmaker(bind=engine)
@@ -25,7 +25,7 @@ def test_calculate_risk_score_is_pure_multiplication():
     score = calculate_risk_score(
         failure_probability=0.2, amount=1000, recovery_probability=0.5
     )
-    assert score == 100.0  # 0.2 * 1000 * 0.5
+    assert score == 100.0 
 
 
 def test_historical_failure_rate_for_method_falls_back_when_no_data():
@@ -55,7 +55,7 @@ def test_historical_failure_rate_for_method_reflects_real_data():
         db.commit()
         db.refresh(customer)
 
-        # 2 failed, 8 success out of 10 UPI transactions -> rate should be 0.2
+       
         for i in range(10):
             status = TransactionStatus.FAILED if i < 2 else TransactionStatus.SUCCESS
             db.add(

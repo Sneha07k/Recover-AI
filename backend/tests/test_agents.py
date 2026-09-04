@@ -24,20 +24,13 @@ def make_test_session():
     engine = create_engine(
         "sqlite:///:memory:", connect_args={"check_same_thread": False}
     )
-    from app.models import models  # noqa: F401 registers tables on Base
+    from app.models import models  
 
     Base.metadata.create_all(bind=engine)
     Session = sessionmaker(bind=engine)
     return Session()
 
 
-# ---------------------------------------------------------------------
-# Fake Groq client — mimics just enough of the OpenAI-compatible response
-# shape for run_agent_loop's logic to be tested with zero network calls.
-# Real Groq/OpenAI tool call arguments arrive as a JSON STRING, which is
-# why FakeFunction.arguments below is always a json.dumps(...) string,
-# not a raw dict — matching the real API's behavior exactly.
-# ---------------------------------------------------------------------
 class FakeFunction:
     def __init__(self, name, arguments: dict):
         self.name = name
@@ -191,11 +184,7 @@ def test_get_transaction_tool_returns_expected_fields():
 
 
 def test_run_agent_loop_calls_tool_then_returns_submitted_decision():
-    """
-    Simulates a two-turn conversation: the model first calls get_transaction,
-    then (having "seen" the result) submits its final decision. No network
-    call happens — the fake client just returns pre-scripted responses.
-    """
+   
     turn_1 = FakeResponse(
         message=FakeMessage(
             tool_calls=[
@@ -237,7 +226,7 @@ def test_run_agent_loop_calls_tool_then_returns_submitted_decision():
     assert result["action"] == "retry"
     assert result["confidence"] == 0.8
     assert calls_seen == [{"transaction_id": 42}]
-    assert len(fake_client.chat.completions.calls) == 2  # one API call per turn
+    assert len(fake_client.chat.completions.calls) == 2  
 
 
 def test_run_agent_loop_raises_if_no_decision_within_max_turns():

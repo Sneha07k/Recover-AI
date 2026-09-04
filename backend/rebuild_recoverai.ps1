@@ -1,6 +1,4 @@
-# RecoverAI - full rebuild script for Phases 1-7
-# Run this from inside backend\ with your venv activated: .
-# rebuild_recoverai.ps1
+
 
 New-Item -ItemType Directory -Force -Path 'app' | Out-Null
 @'
@@ -21,16 +19,7 @@ from app.strategy.engine import StrategyRecommendation
 def is_ambiguous(
     recommendation: StrategyRecommendation, amount: float, close_call_ratio: float = 0.15
 ) -> bool:
-    """
-    Flags a case as worth the LLM agent's attention if EITHER:
-      - the top two candidate strategies are close in expected value
-        (the deterministic engine's "best" pick isn't clearly best), or
-      - the transaction is high-value enough to warrant extra scrutiny
-        regardless of how confident the deterministic engine is.
-
-    Most failures should return False here — that's the point. The agent
-    is expensive and slow; it should only see the genuinely hard cases.
-    """
+    
     sorted_candidates = sorted(recommendation.candidates, key=lambda c: c[3], reverse=True)
     if len(sorted_candidates) < 2:
         return False
@@ -70,22 +59,7 @@ def run_agent_loop(
     client=None,
     max_turns: int = MAX_TURNS,
 ) -> dict:
-    """
-    Runs the tool-calling conversation until the model calls
-    submit_recovery_decision, then returns that call's parsed arguments.
-
-    `client` is injected rather than constructed internally so tests can
-    pass a fake object with a `.chat.completions.create(...)` method - the
-    real Groq API is never touched by our test suite.
-
-    Note the shape here differs from Anthropic's tool-use API in three
-    ways that matter: (1) the system prompt is just another message with
-    role="system", not a separate parameter; (2) each tool call's arguments
-    arrive as a JSON STRING that we must json.loads() ourselves, not an
-    already-parsed dict; (3) tool results go back as their own role="tool"
-    messages (one per call), not a single user message containing a list
-    of tool_result blocks.
-    """
+   
     if client is None:
         client = _build_client()
 
@@ -110,9 +84,7 @@ def run_agent_loop(
                 "Agent ended its turn without calling a tool or submitting a decision."
             )
 
-        # Re-append the assistant turn as a plain dict so the conversation
-        # history stays a consistent, serializable shape regardless of the
-        # SDK's internal object types.
+       
         messages.append(
             {
                 "role": "assistant",
@@ -201,9 +173,7 @@ def make_agent_decision(
 
     raw_result = run_agent_loop(SYSTEM_PROMPT, user_message, tool_executor, client=client)
 
-    # Validate the model's structured output against our own schema before
-    # trusting any of it — a tool schema is a strong hint to the model,
-    # never a guarantee.
+   
     validated = AgentDecisionResult.model_validate(raw_result)
 
     decision = AgentDecision(
@@ -229,12 +199,7 @@ from app.models.enums import RecoveryStrategy
 
 
 class AgentDecisionResult(BaseModel):
-    """
-    The structured shape every agent decision must take. Even though the
-    tool schema already constrains what the model can send, we validate
-    again here in our own code — a tool schema is a strong hint to the
-    model, not a hard guarantee, so we never trust it blindly.
-    """
+    
 
     action: RecoveryStrategy
     confidence: float = Field(ge=0, le=1)
@@ -253,11 +218,7 @@ from app.policies.constants import HIGH_VALUE_TRANSACTION_THRESHOLD, MAX_AUTOMAT
 from app.risk.scoring import historical_failure_rate_for_customer
 from app.strategy.probability import predict_recovery_probability
 
-# Tool schemas in Groq's (OpenAI-compatible) function-calling format. Every
-# tool here except submit_recovery_decision is read-only — it looks things
-# up, it never changes anything. submit_recovery_decision is intercepted by
-# the agent loop itself (see app/agents/client.py) rather than "executed"
-# at all.
+
 TOOLS = [
     {
         "type": "function",
@@ -359,10 +320,7 @@ TOOLS = [
 
 
 def build_tool_executor(db: Session) -> dict:
-    """
-    Returns {tool_name: callable} for every tool EXCEPT submit_recovery_decision,
-    which the agent loop handles specially rather than "executing".
-    """
+    
 
     def get_transaction(tool_input: dict) -> dict:
         txn = db.get(Transaction, tool_input["transaction_id"])
@@ -437,23 +395,14 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    """
-    Central place for all configurable values. Every field here can be
-    overridden by an environment variable of the same name (case-insensitive),
-    which we load from a .env file during development.
-    """
+    
 
     model_config = SettingsConfigDict(env_file=".env")
 
     APP_NAME: str = "RecoverAI"
     ENVIRONMENT: str = "development"
 
-    # SQLite file lives inside data/ so it's easy to find and .gitignore
-    DATABASE_URL: str = "sqlite:///../data/recoverai.db"
-
-    # Required only for Phase 7's agent layer. Leave empty and the agent
-    # simply won't be callable — everything else in the system works fine
-    # without it, since the LLM is used only for one specific decision step.
+    
     GROQ_API_KEY: str = ""
 
 
@@ -469,10 +418,7 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 
 from app.config import settings
 
-# check_same_thread=False is a SQLite-specific quirk: by default SQLite
-# refuses to let a connection be used across threads, but FastAPI can
-# handle a single request across different threads. Safe for our use case
-# since SQLAlchemy's session handling still keeps operations sequential.
+
 engine = create_engine(
     settings.DATABASE_URL,
     connect_args={"check_same_thread": False},
@@ -480,27 +426,19 @@ engine = create_engine(
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Every SQLAlchemy model (Phase 2 onward) will inherit from this Base,
-# which is what lets SQLAlchemy know to create a table for it.
+
 Base = declarative_base()
 
 
 def init_db():
-    """
-    Creates all tables that have been defined via classes inheriting from
-    Base (see app/models/models.py). Safe to call repeatedly — it only
-    creates tables that don't already exist.
-    """
+   
     from app.models import models  # noqa: F401 (import registers the tables)
 
     Base.metadata.create_all(bind=engine)
 
 
 def get_db():
-    """
-    FastAPI dependency: gives each request its own DB session and
-    guarantees it's closed afterward, even if the request raises an error.
-    """
+    
     db = SessionLocal()
     try:
         yield db
@@ -527,16 +465,7 @@ from app.models.models import EventLog
 
 
 class EventBus:
-    """
-    A simple in-process publish/subscribe system. Producers call publish()
-    with an Event; every function that has subscribe()'d to that event's
-    type gets called with it.
-
-    We deliberately don't reach for Kafka/Redis here — a single Python
-    process handling a simulated event stream doesn't need a distributed
-    message broker yet. If we ever run multiple processes, this class is
-    the one place we'd swap out.
-    """
+    
 
     def __init__(self):
         self._subscribers: dict[EventType, list[Callable[[Session, Event], None]]] = defaultdict(list)
@@ -545,8 +474,7 @@ class EventBus:
         self._subscribers[event_type].append(handler)
 
     def publish(self, db: Session, event: Event) -> None:
-        # Persist first so the audit trail exists even if a subscriber
-        # raises an exception while handling it.
+       
         record = EventLog(
             event_type=event.event_type.value,
             entity_type=event.entity_type,
@@ -561,8 +489,7 @@ class EventBus:
             handler(db, event)
 
 
-# Single shared instance — producers and consumers both import this same
-# object so they're all talking to the same bus.
+
 event_bus = EventBus()
 
 '@ | Set-Content -Path 'app/events/bus.py' -Encoding utf8
@@ -582,11 +509,7 @@ logging.basicConfig(level=logging.INFO, format="%(message)s")
 
 
 def log_payment_failed(db, event: Event) -> None:
-    """
-    Example consumer: just observes PAYMENT_FAILED events and logs them.
-    Kept alongside the real Risk Engine consumer to show that multiple,
-    independent consumers can react to the exact same event.
-    """
+   
     txn_id = event.entity_id
     amount = event.payload.get("amount")
     method = event.payload.get("payment_method")
@@ -630,11 +553,7 @@ from app.events.enums import EventType
 
 
 class Event(BaseModel):
-    """
-    The structured envelope every event in the system takes.
-    entity_type/entity_id say what the event is about (e.g. "transaction", 8492).
-    payload carries whatever extra detail that specific event type needs.
-    """
+   
 
     event_type: EventType
     entity_type: str
@@ -658,12 +577,7 @@ app = FastAPI(title=settings.APP_NAME)
 
 @app.get("/health")
 def health_check(db: Session = Depends(get_db)):
-    """
-    Confirms the API is running AND the database connection actually works.
-    We run a trivial query rather than just returning {"status": "ok"} so
-    that a broken DB connection fails loudly here instead of surprising us
-    later in a real endpoint.
-    """
+    
     db.execute(text("SELECT 1"))
     return {
         "status": "ok",
@@ -690,20 +604,7 @@ from app.models.models import RecoveryAttempt, Transaction
 
 
 def build_recovery_dataset(db: Session) -> pd.DataFrame:
-    """
-    Builds one row per failed transaction that had a recovery attempt.
-
-    Every feature is computed using ONLY information available strictly
-    BEFORE that transaction occurred (transactions are processed in id
-    order, and each row's running counters are updated AFTER its features
-    are read). This avoids two kinds of leakage at once:
-
-    1. Temporal leakage: a transaction's features can't depend on data
-       that, chronologically, hadn't happened yet in a real system.
-    2. Ground-truth leakage: failure_type (the simulator's hidden variable
-       that actually determines recovery odds) is intentionally excluded.
-       The model only ever sees things a real system could observe.
-    """
+    
     transactions = db.query(Transaction).order_by(Transaction.id.asc()).all()
     attempts_by_txn = {a.transaction_id: a for a in db.query(RecoveryAttempt).all()}
 
@@ -765,8 +666,7 @@ def build_recovery_dataset(db: Session) -> pd.DataFrame:
                 }
             )
 
-        # Update running counters AFTER reading them above, so the current
-        # transaction never counts toward its own features.
+        
         customer_seen[cid] += 1
         method_seen[method] += 1
         if txn.status == TransactionStatus.FAILED:
@@ -792,9 +692,7 @@ from sklearn.model_selection import StratifiedKFold, cross_val_predict
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
-# Numeric features only — payment_method is categorical and gets one-hot
-# encoded separately. Note failure_type is NOT here: it's the simulator's
-# hidden ground truth, never a legitimate feature.
+
 FEATURE_COLUMNS_NUMERIC = [
     "amount",
     "customer_prior_transactions",
@@ -806,7 +704,7 @@ FEATURE_COLUMNS_NUMERIC = [
 
 
 def prepare_features(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
-    """One-hot encode payment_method, keep numeric features as-is."""
+   
     method_dummies = pd.get_dummies(df["payment_method"], prefix="method").astype(float)
     X = pd.concat([df[FEATURE_COLUMNS_NUMERIC], method_dummies], axis=1)
     y = df["recovered"]
@@ -814,18 +712,7 @@ def prepare_features(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
 
 
 def train_and_evaluate(df: pd.DataFrame, n_splits: int = 5):
-    """
-    With only a few hundred labeled examples, one train/test split gives a
-    noisy performance estimate - try it twice with different random seeds
-    and watch the numbers swing wildly. K-fold cross-validation fixes this:
-    every example gets used as held-out test data exactly once (across
-    n_splits folds), so we evaluate on far more predictions overall while
-    still never letting a fold's own test rows influence its training.
 
-    StandardScaler lives inside the Pipeline so it's refit separately on
-    each fold's training portion - otherwise fitting it once on all the
-    data first would leak each fold's test statistics into training.
-    """
     X, y = prepare_features(df)
 
     pipeline = Pipeline(
@@ -843,9 +730,7 @@ def train_and_evaluate(df: pd.DataFrame, n_splits: int = 5):
     cm = confusion_matrix(y, y_pred)
     auc = roc_auc_score(y, y_proba)
 
-    # Final model refit on ALL available data - this is the one we
-    # actually save and use, distinct from the fold models used only for
-    # evaluation above.
+   
     final_pipeline = pipeline.fit(X, y)
 
     return final_pipeline, X.columns.tolist(), report, cm, auc
@@ -863,11 +748,7 @@ import enum
 
 
 class CustomerType(str, enum.Enum):
-    """
-    Persistent behavioral profile for a customer. This is what gives the
-    simulator real signal — a FREQUENTLY_FAILS customer fails more often
-    every time, not just by coincidence.
-    """
+
     RELIABLE = "reliable"
     OCCASIONAL_PAYER = "occasional_payer"
     PRICE_SENSITIVE = "price_sensitive"
@@ -890,11 +771,7 @@ class TransactionStatus(str, enum.Enum):
 
 
 class FailureType(str, enum.Enum):
-    """
-    Hidden ground truth the simulator uses to decide whether a retry would
-    succeed. Deliberately NOT visible to the risk engine or ML model — in
-    a real system there is no such field, only the observed outcome.
-    """
+   
     TRANSIENT = "transient"
     PERMANENT = "permanent"
 
@@ -957,10 +834,7 @@ class Transaction(Base):
 
 
 class EventLog(Base):
-    """
-    Persisted record of every event published on the event bus — the raw
-    material for the audit trail we build properly in Phase 10.
-    """
+    
     __tablename__ = "events"
 
     id = Column(Integer, primary_key=True)
@@ -972,11 +846,7 @@ class EventLog(Base):
 
 
 class RiskAssessment(Base):
-    """
-    One deterministic risk assessment produced for a failed transaction:
-    how likely it was to fail, how much money is involved, how likely a
-    recovery action is to succeed, and the combined priority score.
-    """
+  
     __tablename__ = "risk_assessments"
 
     id = Column(Integer, primary_key=True)
@@ -991,13 +861,7 @@ class RiskAssessment(Base):
 
 
 class RecoveryAttempt(Base):
-    """
-    Records the outcome of a (simplified, unconditional) retry made on a
-    failed transaction. This is the historical, labeled data we need to
-    train the recovery-prediction model in Phase 5. failure_type is the
-    simulator's hidden ground truth — it must NEVER be used as a model
-    feature, only to generate this training label.
-    """
+    
     __tablename__ = "recovery_attempts"
 
     id = Column(Integer, primary_key=True)
@@ -1009,12 +873,7 @@ class RecoveryAttempt(Base):
 
 
 class StrategyDecision(Base):
-    """
-    A recommended recovery strategy and the expected-value reasoning
-    behind it, for one failed transaction. Nothing is executed here —
-    this is a recommendation only. Phase 8 adds policy gating; Phase 9
-    wires in real execution.
-    """
+   
     __tablename__ = "strategy_decisions"
 
     id = Column(Integer, primary_key=True)
@@ -1031,12 +890,7 @@ class StrategyDecision(Base):
 
 
 class AgentDecision(Base):
-    """
-    A recovery decision produced by the LLM agent for an AMBIGUOUS case
-    only (see app/agents/ambiguity.py) — most failures never reach this
-    table because Phase 6's deterministic engine already handles them.
-    This is still just a proposal: nothing is executed here either.
-    """
+   
     __tablename__ = "agent_decisions"
 
     id = Column(Integer, primary_key=True)
@@ -1088,11 +942,7 @@ from app.risk.scoring import (
 
 
 def assess_risk_on_payment_failed(db: Session, event: Event) -> RiskAssessment:
-    """
-    Consumer for PAYMENT_FAILED events. Computes a deterministic risk score
-    and persists it — the first real "brain" in the pipeline, even though
-    no ML or LLM is involved yet.
-    """
+   
     transaction_id = event.entity_id
     customer_id = event.payload["customer_id"]
     payment_method = PaymentMethod(event.payload["payment_method"])
@@ -1128,9 +978,7 @@ from sqlalchemy.orm import Session
 from app.models.enums import PaymentMethod, TransactionStatus
 from app.models.models import Transaction
 
-# Rule-based estimate of how likely a failed payment is to be recoverable
-# if we intervene (e.g. retry). Deliberately simple for Phase 4 — Phase 5
-# replaces this with a real ML model trained on observed outcomes.
+
 RECOVERY_PROBABILITY_BY_METHOD = {
     PaymentMethod.UPI: 0.55,
     PaymentMethod.CREDIT_CARD: 0.35,
@@ -1139,18 +987,14 @@ RECOVERY_PROBABILITY_BY_METHOD = {
     PaymentMethod.WALLET: 0.60,
 }
 
-# Below this many past transactions, we don't yet trust a customer's own
-# failure rate enough to rely on it over the payment method's baseline.
+
 MIN_SAMPLES_FOR_CUSTOMER_RATE = 5
 
 
 def historical_failure_rate_for_method(
     db: Session, payment_method: PaymentMethod, exclude_transaction_id: int | None = None
 ) -> float:
-    """
-    Fraction of all past transactions on this payment method that failed —
-    the population baseline we'd guess for a customer we know nothing about.
-    """
+    
     query = db.query(func.count(Transaction.id)).filter(
         Transaction.payment_method == payment_method
     )
@@ -1175,10 +1019,7 @@ def historical_failure_rate_for_method(
 def historical_failure_rate_for_customer(
     db: Session, customer_id: int, exclude_transaction_id: int | None = None
 ) -> tuple[float, int]:
-    """
-    Same idea, scoped to one customer's own transaction history.
-    Returns (rate, sample_size) so the caller can decide whether to trust it.
-    """
+    
     query = db.query(func.count(Transaction.id)).filter(
         Transaction.customer_id == customer_id
     )
@@ -1206,13 +1047,7 @@ def estimate_failure_probability(
     payment_method: PaymentMethod,
     exclude_transaction_id: int | None = None,
 ) -> float:
-    """
-    Blends the customer's own history with the payment method's population
-    baseline. We deliberately do NOT read the simulator's hidden
-    `customer_type` field here — in a real system that field doesn't exist,
-    only observed behavior does. Reading it would be label leakage: the
-    same mistake we must avoid with ML in Phase 5.
-    """
+    
     method_rate = historical_failure_rate_for_method(
         db, payment_method, exclude_transaction_id
     )
@@ -1223,8 +1058,7 @@ def estimate_failure_probability(
     if sample_size < MIN_SAMPLES_FOR_CUSTOMER_RATE:
         return method_rate
 
-    # More history on this customer -> more weight on their own rate,
-    # capped so the method baseline is never fully ignored.
+   
     weight = min(sample_size / 20, 0.8)
     return weight * customer_rate + (1 - weight) * method_rate
 
@@ -1232,16 +1066,7 @@ def estimate_failure_probability(
 def calculate_risk_score(
     failure_probability: float, amount: float, recovery_probability: float
 ) -> float:
-    """
-    RecoverAI's core prioritization formula:
-
-        risk_score = failure_probability × amount × recovery_probability
-
-    This is NOT plain "expected loss" (that would omit recovery_probability).
-    It's "expected recoverable revenue" — a big, likely-recoverable failure
-    scores higher than an equally likely failure that's hard to recover,
-    because the system's job is deciding where to spend intervention effort.
-    """
+    
     return failure_probability * amount * recovery_probability
 
 '@ | Set-Content -Path 'app/risk/scoring.py' -Encoding utf8
@@ -1272,9 +1097,7 @@ from app.models.models import Merchant, Customer, RecoveryAttempt, Transaction
 
 fake = Faker()
 
-# Base failure probability per payment method. Roughly reflects real-world
-# patterns: UPI/wallets are quite reliable, cards fail more due to bank-side
-# declines, expiry, insufficient funds, etc.
+
 BASE_FAILURE_PROBABILITY = {
     PaymentMethod.UPI: 0.05,
     PaymentMethod.CREDIT_CARD: 0.12,
@@ -1283,9 +1106,7 @@ BASE_FAILURE_PROBABILITY = {
     PaymentMethod.WALLET: 0.04,
 }
 
-# Multiplies the base failure probability based on the customer's behavioral
-# profile. A FREQUENTLY_FAILS customer is 2.5x more likely to fail on any
-# given payment method than the base rate for that method.
+
 CUSTOMER_FAILURE_MULTIPLIER = {
     CustomerType.RELIABLE: 0.5,
     CustomerType.OCCASIONAL_PAYER: 1.0,
@@ -1295,8 +1116,7 @@ CUSTOMER_FAILURE_MULTIPLIER = {
     CustomerType.SUBSCRIPTION_HEAVY: 1.0,
 }
 
-# Rough distribution of customer types across the simulated population.
-# Must sum to 1.0.
+
 CUSTOMER_TYPE_WEIGHTS = {
     CustomerType.RELIABLE: 0.30,
     CustomerType.OCCASIONAL_PAYER: 0.25,
@@ -1306,8 +1126,7 @@ CUSTOMER_TYPE_WEIGHTS = {
     CustomerType.SUBSCRIPTION_HEAVY: 0.10,
 }
 
-# Mean of the underlying normal distribution (log-space) for each customer
-# type's order amount. e.g. mean_log=7.0 -> typical amount around e^7 ≈ 1,100.
+
 AMOUNT_MEAN_LOG = {
     CustomerType.RELIABLE: 7.0,
     CustomerType.OCCASIONAL_PAYER: 6.5,
@@ -1317,10 +1136,7 @@ AMOUNT_MEAN_LOG = {
     CustomerType.SUBSCRIPTION_HEAVY: 7.2,
 }
 
-# Probability that a given failure is TRANSIENT (network blip, temporary
-# provider issue) rather than PERMANENT (card declined, blocked, expired).
-# This is the simulator's hidden ground truth for whether a retry would
-# actually work — it must never be exposed as a feature to any predictor.
+
 TRANSIENT_PROBABILITY_BY_METHOD = {
     PaymentMethod.UPI: 0.85,
     PaymentMethod.WALLET: 0.85,
@@ -1329,9 +1145,7 @@ TRANSIENT_PROBABILITY_BY_METHOD = {
     PaymentMethod.CREDIT_CARD: 0.50,
 }
 
-# Additive adjustment to the transient probability based on customer
-# behavior — a FREQUENTLY_FAILS customer's failures skew more permanent
-# (e.g. genuinely blocked cards) rather than transient network issues.
+
 TRANSIENT_ADJUSTMENT_BY_CUSTOMER_TYPE = {
     CustomerType.RELIABLE: 0.05,
     CustomerType.OCCASIONAL_PAYER: 0.0,
@@ -1341,8 +1155,7 @@ TRANSIENT_ADJUSTMENT_BY_CUSTOMER_TYPE = {
     CustomerType.SUBSCRIPTION_HEAVY: 0.0,
 }
 
-# Given the TRUE failure type, probability that an immediate retry succeeds.
-# Transient failures usually resolve themselves; permanent ones almost never do.
+
 RECOVERY_SUCCESS_PROBABILITY_BY_FAILURE_TYPE = {
     FailureType.TRANSIENT: 0.80,
     FailureType.PERMANENT: 0.05,
@@ -1389,19 +1202,17 @@ def generate_transactions(
         customer = random.choice(customers)
         payment_method = random.choice(methods)
 
-        # Amount: log-normal, parameterized by customer type, capped so a
-        # rare extreme sample doesn't produce an absurd outlier.
+      
         mean_log = AMOUNT_MEAN_LOG[customer.customer_type]
         amount = float(np.random.lognormal(mean=mean_log, sigma=0.6))
         amount = round(min(amount, 200_000), 2)
 
-        # Failure probability combines the payment method's base rate with
-        # this customer's behavioral multiplier, capped below 1.0.
+       
         fail_prob = BASE_FAILURE_PROBABILITY[payment_method]
         fail_prob *= CUSTOMER_FAILURE_MULTIPLIER[customer.customer_type]
         fail_prob = min(fail_prob, 0.95)
 
-        # Bernoulli trial: one weighted coin flip decides success vs failure.
+      
         will_fail = np.random.random() < fail_prob
         status = TransactionStatus.FAILED if will_fail else TransactionStatus.SUCCESS
 
@@ -1420,9 +1231,7 @@ def generate_transactions(
             "customer_id": customer.id,
         }
 
-        # Every transaction announces its own lifecycle: created, then the
-        # outcome. Nothing downstream reads txn.status directly anymore —
-        # they react to these events instead.
+       
         event_bus.publish(
             db,
             Event(
@@ -1443,9 +1252,7 @@ def generate_transactions(
         )
 
         if will_fail:
-            # Simplified, unconditional retry: every failure gets one retry
-            # attempt so we accumulate historical labeled data. Phases 6-9
-            # replace this with a real bounded decision + policy-gated flow.
+           
             transient_prob = TRANSIENT_PROBABILITY_BY_METHOD[payment_method]
             transient_prob += TRANSIENT_ADJUSTMENT_BY_CUSTOMER_TYPE[customer.customer_type]
             transient_prob = min(max(transient_prob, 0.05), 0.95)
@@ -1499,7 +1306,7 @@ def run_simulation(
     num_transactions: int = 1000,
     merchant_name: str = "Demo Merchant",
 ):
-    """Generates one merchant, its customers, and its transaction stream."""
+   
     merchant = create_merchant(db, name=merchant_name)
     customers = generate_customers(db, merchant, num_customers)
     transactions = generate_transactions(db, customers, num_transactions)
@@ -1526,8 +1333,7 @@ class StrategyParams:
     amount_multiplier: float
 
 
-# Deliberately simple, explainable numbers for Phase 6. Phase 7 (agent) and
-# Phase 8 (policy) build ON TOP of this reasoning — they don't replace it.
+
 STRATEGY_DEFINITIONS: dict[RecoveryStrategy, StrategyParams] = {
     # A plain immediate retry: cheap, no change to the base probability.
     RecoveryStrategy.RETRY: StrategyParams(
@@ -1597,11 +1403,7 @@ def recommend_strategy(
     payment_method: PaymentMethod,
     amount: float,
 ) -> StrategyRecommendation:
-    """
-    Computes expected value for every candidate strategy and returns the
-    best one. STOP is always included with expected_value == 0, which
-    guarantees the result never has negative expected value.
-    """
+   
     base_probability = predict_recovery_probability(
         db, customer_id, payment_method, amount, exclude_transaction_id=transaction_id
     )
@@ -1637,12 +1439,7 @@ def recommend_strategy(
 
 
 def recommend_strategy_on_payment_failed(db: Session, event: Event) -> StrategyDecision:
-    """
-    Consumer for PAYMENT_FAILED events. Persists the recommended strategy
-    and its expected-value reasoning. NOTE: nothing is executed here — no
-    retry actually happens, no money moves. Phase 8 adds the policy gate;
-    Phase 9 wires in real execution.
-    """
+   
     transaction_id = event.entity_id
     customer_id = event.payload["customer_id"]
     payment_method = PaymentMethod(event.payload["payment_method"])
@@ -1697,12 +1494,7 @@ MODEL_PATH = Path(__file__).resolve().parents[3] / "data" / "models" / "recovery
 
 @lru_cache(maxsize=1)
 def _load_model():
-    """
-    Loads the trained recovery model once and caches it for the life of
-    the process. Returns (None, None) if no model has been trained yet,
-    so callers fall back gracefully instead of crashing — the exact
-    situation a freshly deployed system would be in.
-    """
+    
     try:
         bundle = joblib.load(MODEL_PATH)
         return bundle["model"], bundle["feature_names"]
@@ -1732,11 +1524,7 @@ def build_live_features(
     amount: float,
     exclude_transaction_id: int | None = None,
 ) -> dict:
-    """
-    Computes the exact same features used at training time (see
-    app/ml/features.py), but for one live transaction right now, using
-    only historical data available up to this point.
-    """
+    
     customer_fail_rate, customer_total = historical_failure_rate_for_customer(
         db, customer_id, exclude_transaction_id
     )
@@ -1776,12 +1564,7 @@ def predict_recovery_probability(
     amount: float,
     exclude_transaction_id: int | None = None,
 ) -> float:
-    """
-    Uses the trained ML model if one exists; otherwise falls back to the
-    Phase 4 rule-based estimate. This graceful degradation matters in
-    practice — a freshly deployed system has no trained model yet and
-    should still make sensible decisions instead of failing outright.
-    """
+    
     model, feature_names = _load_model()
 
     if model is None:
@@ -1805,17 +1588,7 @@ def predict_recovery_probability(
 
 New-Item -ItemType Directory -Force -Path 'scripts' | Out-Null
 @'
-"""
-Run with: python scripts/run_agent_demo.py
-Requires GROQ_API_KEY to be set in backend/.env
-Assumes scripts/run_simulation.py has already been run.
 
-Deliberately NOT wired into the automatic event pipeline: real LLM calls
-have cost and latency that a bulk simulation of thousands of transactions
-shouldn't pay for every single failure. Only genuinely ambiguous cases
-(see app/agents/ambiguity.py) get sent to the agent, and only a handful
-per run here.
-"""
 from app.agents.ambiguity import is_ambiguous
 from app.agents.engine import make_agent_decision
 from app.database import SessionLocal, init_db
@@ -1879,9 +1652,7 @@ if __name__ == "__main__":
 
 New-Item -ItemType Directory -Force -Path 'scripts' | Out-Null
 @'
-"""
-Run with: python scripts/run_simulation.py [num_customers] [num_transactions]
-"""
+
 import sys
 
 from sqlalchemy import func
@@ -1956,10 +1727,7 @@ if __name__ == "__main__":
 
 New-Item -ItemType Directory -Force -Path 'scripts' | Out-Null
 @'
-"""
-Run with: python scripts/train_recovery_model.py
-Assumes you've already run scripts/run_simulation.py to populate the database.
-"""
+
 import os
 
 import joblib

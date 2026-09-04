@@ -1,15 +1,4 @@
-﻿"""
-Run with: python scripts/run_agent_demo.py
-Requires GROQ_API_KEY to be set in backend/.env
-Assumes scripts/run_simulation.py has already been run.
-
-Deliberately NOT wired into the automatic event pipeline: real LLM calls
-have cost and latency that a bulk simulation of thousands of transactions
-shouldn't pay for every single failure. Only genuinely ambiguous cases
-(see app/agents/ambiguity.py) get sent to the agent, and only a handful
-per run here.
-"""
-from app.agents.ambiguity import is_ambiguous
+﻿from app.agents.ambiguity import is_ambiguous
 from app.agents.engine import make_agent_decision
 from app.database import SessionLocal, init_db
 from app.models.enums import TransactionStatus

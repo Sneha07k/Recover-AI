@@ -2,11 +2,6 @@
 
 
 class CustomerType(str, enum.Enum):
-    """
-    Persistent behavioral profile for a customer. This is what gives the
-    simulator real signal â€” a FREQUENTLY_FAILS customer fails more often
-    every time, not just by coincidence.
-    """
     RELIABLE = "reliable"
     OCCASIONAL_PAYER = "occasional_payer"
     PRICE_SENSITIVE = "price_sensitive"
@@ -29,11 +24,7 @@ class TransactionStatus(str, enum.Enum):
 
 
 class FailureType(str, enum.Enum):
-    """
-    Hidden ground truth the simulator uses to decide whether a retry would
-    succeed. Deliberately NOT visible to the risk engine or ML model â€” in
-    a real system there is no such field, only the observed outcome.
-    """
+   
     TRANSIENT = "transient"
     PERMANENT = "permanent"
 

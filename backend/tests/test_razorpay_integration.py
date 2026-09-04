@@ -17,7 +17,7 @@ def make_test_session():
     engine = create_engine(
         "sqlite:///:memory:", connect_args={"check_same_thread": False}
     )
-    from app.models import models  # noqa: F401
+    from app.models import models 
 
     Base.metadata.create_all(bind=engine)
     Session = sessionmaker(bind=engine)
@@ -25,11 +25,7 @@ def make_test_session():
 
 
 class FakePaymentLinkResource:
-    """
-    Mimics razorpay.Client().payment_link — records what it was called
-    with, and returns a response shaped exactly like Razorpay's real
-    documented response (see create-standard payment link API reference).
-    """
+   
 
     def __init__(self):
         self.last_payload = None
@@ -103,8 +99,7 @@ def test_converts_amount_to_paise_correctly():
             db, txn, customer, RecoveryStrategy.CUSTOMER_REMINDER, client=fake_client
         )
 
-        # CUSTOMER_REMINDER has amount_multiplier=1.0, so 1000.00 rupees
-        # should become exactly 100000 paise.
+        
         assert fake_client.payment_link.last_payload["amount"] == 100000
     finally:
         db.close()
@@ -120,7 +115,7 @@ def test_incentive_discount_reduces_link_amount():
             db, txn, customer, RecoveryStrategy.INCENTIVE, client=fake_client
         )
 
-        # INCENTIVE has amount_multiplier=0.90 -> 900.00 rupees -> 90000 paise
+        
         assert fake_client.payment_link.last_payload["amount"] == 90000
     finally:
         db.close()

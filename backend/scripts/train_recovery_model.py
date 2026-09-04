@@ -1,8 +1,4 @@
-﻿"""
-Run with: python scripts/train_recovery_model.py
-Assumes you've already run scripts/run_simulation.py to populate the database.
-"""
-import os
+﻿import os
 
 import joblib
 

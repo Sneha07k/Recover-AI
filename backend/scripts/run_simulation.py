@@ -1,8 +1,4 @@
-﻿"""
-Run with: python scripts/run_simulation.py [num_customers] [num_transactions]
-"""
-
-import sys
+﻿import sys
 
 from app.analytics.metrics import compute_metrics
 from app.database import SessionLocal, init_db

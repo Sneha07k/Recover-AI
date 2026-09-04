@@ -46,11 +46,7 @@ _consumers_registered = False
 
 
 def _ensure_consumers_registered():
-    """
-    register_default_consumers() only needs to run once per process — it
-    just wires subscriptions onto the shared event bus. Calling it again
-    would double-subscribe every consumer.
-    """
+   
     global _consumers_registered
     if not _consumers_registered:
         register_default_consumers()
@@ -63,14 +59,7 @@ def action_simulate(
     num_transactions: int = Query(1500, ge=1, le=50_000),
     db: Session = Depends(get_db),
 ):
-    """
-    Runs a real simulation through the full closed loop (Phases 2-9) and
-    returns the resulting headline metrics — the same function
-    scripts/run_simulation.py calls, just triggered from the dashboard
-    instead of a terminal. Timed so the dashboard can show real,
-    live-measured throughput (Phase 13's performance work made this fast
-    enough to demo interactively at all).
-    """
+   
     _ensure_consumers_registered()
 
     start = time.perf_counter()
@@ -94,15 +83,7 @@ def action_simulate(
 
 @router.post("/actions/train-model")
 def action_train_model(db: Session = Depends(get_db)):
-    """
-    Trains the Phase 5 recovery-prediction model on whatever data
-    currently exists, saves it to disk, and invalidates the in-process
-    model cache so the very next /actions/simulate call actually uses it.
-
-    Also computes the rule-based baseline's AUC on the exact same data,
-    live, so the honest ML-vs-baseline comparison (Phase 5/12's finding)
-    is visible immediately rather than buried in a CLI report.
-    """
+    
     df = build_recovery_dataset(db)
     if len(df) < 30:
         return {
@@ -146,31 +127,20 @@ def action_experiment(
     num_transactions: int = Query(3000, ge=1, le=50_000),
     seed: int = Query(42),
 ):
-    """
-    Runs the Phase 12 fair strategy comparison (no_intervention vs.
-    immediate_retry vs. rule_based vs. ml_based) against a dedicated,
-    isolated population and returns the results.
-    """
+    
     return run_experiment_end_to_end(num_customers, num_transactions, seed)
 
 
 @router.post("/actions/failure-demo")
 def action_failure_demo(seed: int = Query(5)):
-    """
-    Runs the Phase 15 failure demonstration and returns each scenario's
-    narrative as structured data for the dashboard to render.
-    """
+   
     return {"scenarios": run_all_failure_scenarios(seed)}
 
 
 @router.post("/actions/reset")
 def action_reset():
-    """
-    Drops and recreates every table in the main database — a clean slate
-    for a fresh demo run. Does not touch the separate experiment.db or
-    failure_demo.db files used by the two actions above.
-    """
-    from app.models import models  # noqa: F401
+    
+    from app.models import models  
 
     Base.metadata.drop_all(bind=engine)
     init_db()
@@ -186,21 +156,7 @@ def action_try_scenario(
     use_agent: bool = Query(False),
     db: Session = Depends(get_db),
 ):
-    """
-    The interactive "what would RecoverAI decide?" tool. Creates a real
-    (persisted) customer + failed transaction from user input, then runs
-    it through the SAME risk scoring (Phase 4), strategy engine (Phase 6),
-    and policy engine (Phase 8) as the live pipeline — using genuine
-    historical patterns from whatever data already exists, not a fake
-    isolated sandbox. Optionally consults the real Groq LLM agent
-    (Phase 7) on demand, bypassing the automatic ambiguity gate since this
-    is a single, deliberate, user-initiated call, not part of a bulk run.
-
-    Deliberately does NOT call execute_strategy — this shows what the
-    system WOULD decide and whether it's authorized, without simulating
-    an outcome. The transaction is still fully visible afterward through
-    the normal transaction browser and audit trail.
-    """
+   
     try:
         pm = PaymentMethod(payment_method)
         ct = CustomerType(customer_type)
@@ -235,7 +191,7 @@ def action_try_scenario(
     db.commit()
     db.refresh(txn)
 
-    # Phase 4: risk scoring, using real historical patterns from existing data.
+    
     failure_probability = estimate_failure_probability(
         db, customer.id, pm, exclude_transaction_id=txn.id
     )
@@ -244,7 +200,7 @@ def action_try_scenario(
         failure_probability, amount, recovery_probability_rule
     )
 
-    # Phase 6: expected-value strategy comparison.
+   
     recommendation = recommend_strategy(db, txn.id, customer.id, pm, amount)
     persist_strategy_decision(db, txn.id, customer.id, pm, amount, recommendation)
 
@@ -252,9 +208,7 @@ def action_try_scenario(
     requires_approval = False
     agent_info = None
 
-    # Phase 7: on-demand agent consultation, bypassing the ambiguity gate
-    # since the user explicitly asked for it — a different situation from
-    # the automatic bulk pipeline's cost-conscious gating.
+   
     if use_agent:
         if not settings.GROQ_API_KEY:
             agent_info = {
@@ -277,22 +231,11 @@ def action_try_scenario(
             except Exception as e:
                 agent_info = {"error": f"Agent call failed: {e}"}
 
-    # Phase 8: policy check on whichever strategy is actually in effect —
-    # the agent's override if consulted and successful, otherwise the
-    # deterministic recommendation.
     policy_decision = evaluate_and_record_policy(
         db, customer.id, txn.id, strategy_to_check, amount, requires_approval
     )
 
-    # IMPORTANT: persist_strategy_decision and evaluate_and_record_policy
-    # only flush() (Phase 13's batching design — correct for the bulk
-    # /actions/simulate path, where generate_transactions commits the
-    # whole batch at the end). This endpoint is a single, standalone
-    # request with no outer batching commit, so without this explicit
-    # commit, everything flushed above would be silently ROLLED BACK when
-    # this request's session closes — meaning it would compute a correct
-    # response but never actually persist, making it invisible to
-    # /escalations or the transaction browser afterward.
+   
     db.commit()
 
     return {
@@ -316,13 +259,7 @@ def action_try_scenario(
 
 
 def _batch_snapshot(db: Session, transaction_ids: list[int]) -> dict:
-    """
-    Computes a scoped snapshot of exactly one batch's outcomes — never an
-    all-time aggregate, which would dilute the effect with unrelated
-    historical data. Denial reasons are summarized dynamically (grouped
-    by their first ~40 characters) rather than assumed in advance, so the
-    reported story stays honest across any parameters a user picks.
-    """
+    
     txns = db.query(Transaction).filter(Transaction.id.in_(transaction_ids)).all()
     failed = [t for t in txns if t.status == TransactionStatus.FAILED]
 
@@ -386,21 +323,7 @@ def action_chaos_demo(
     degraded_transient_probability: float = Query(0.10, ge=0.0, le=1.0),
     db: Session = Depends(get_db),
 ):
-    """
-    Provider Degradation / "Chaos Mode" demo — the X-factor feature.
-
-    Generates a BEFORE batch (normal conditions), then activates a
-    temporary ground-truth override for one payment method (simulating a
-    real provider outage) and generates a DURING batch, all scoped to
-    that one method so the comparison has no noise from the other four.
-
-    IMPORTANT: chaos mode only ever changes GROUND TRUTH (app/simulator/
-    chaos.py) — the risk engine, strategy engine, and policy engine never
-    see it. Whatever shift shows up below is entirely emergent, computed
-    from real observed transaction/recovery-attempt/policy history, the
-    same way a real production system would have to detect a real outage:
-    by watching its own data, not by being told.
-    """
+    
     try:
         pm = PaymentMethod(payment_method)
     except ValueError as e:
@@ -431,7 +354,7 @@ def action_chaos_demo(
             db, customers, batch_size, fixed_payment_method=pm
         )
     finally:
-        chaos.clear()  # always deactivate, even if generation raises
+        chaos.clear()  
 
     during_ids = [t.id for t in during_txns]
     during = _batch_snapshot(db, during_ids)
@@ -468,13 +391,7 @@ def action_chaos_demo(
 
 @router.get("/system/status")
 def system_status():
-    """
-    Reports whether the optional Groq (LLM agent, Phase 7) and Razorpay
-    (test-mode payment links, Phase 14) integrations are configured —
-    booleans only, never the actual key values. Lets the dashboard prove
-    these integrations genuinely exist in the codebase even when a given
-    deployment doesn't have keys configured.
-    """
+  
     return {
         "groq_configured": bool(settings.GROQ_API_KEY),
         "razorpay_configured": bool(

@@ -19,20 +19,16 @@ def make_test_session():
     engine = create_engine(
         "sqlite:///:memory:", connect_args={"check_same_thread": False}
     )
-    from app.models import models  # noqa: F401
+    from app.models import models 
 
     Base.metadata.create_all(bind=engine)
     Session = sessionmaker(bind=engine)
     return Session()
 
 
-# ---------------------------------------------------------------------
-# simulate_recovery_outcome
-# ---------------------------------------------------------------------
-
 
 def test_same_seed_same_strategy_gives_identical_outcome():
-    """Determinism: identical inputs must always produce identical output."""
+   
     outcomes = set()
     for _ in range(5):
         rng = np.random.default_rng(seed=12345)
@@ -48,12 +44,7 @@ def test_same_seed_same_strategy_gives_identical_outcome():
 
 
 def test_same_seed_different_strategy_uses_shared_underlying_randomness():
-    """
-    A strategy with a higher probability_multiplier should recover at
-    least as often as a lower-multiplier strategy, when aggregated across
-    many transactions using the SAME per-transaction seeds for both — this
-    is the core fairness property the whole experiment depends on.
-    """
+   
     retry_successes = 0
     alt_payment_successes = 0
     n = 500
@@ -66,7 +57,7 @@ def test_same_seed_different_strategy_uses_shared_underlying_randomness():
             RecoveryStrategy.RETRY,
             500.0,
         )
-        rng2 = np.random.default_rng(seed=i)  # same seed
+        rng2 = np.random.default_rng(seed=i) 
         succeeded2, _ = simulate_recovery_outcome(
             rng2,
             PaymentMethod.CREDIT_CARD,
@@ -77,14 +68,10 @@ def test_same_seed_different_strategy_uses_shared_underlying_randomness():
         retry_successes += succeeded1
         alt_payment_successes += succeeded2
 
-    # ALTERNATE_PAYMENT has a higher probability_multiplier (1.30 vs 1.0),
-    # so it should never do worse in aggregate given identical underlying draws.
+   
     assert alt_payment_successes >= retry_successes
 
 
-# ---------------------------------------------------------------------
-# force_rule_based
-# ---------------------------------------------------------------------
 
 
 def test_force_rule_based_ignores_any_trained_model():
@@ -102,11 +89,6 @@ def test_force_rule_based_ignores_any_trained_model():
         assert prob == RECOVERY_PROBABILITY_BY_METHOD[PaymentMethod.UPI]
     finally:
         db.close()
-
-
-# ---------------------------------------------------------------------
-# run_experiment
-# ---------------------------------------------------------------------
 
 
 def _seed_population(db, n_customers=20, n_transactions=100):
@@ -176,10 +158,6 @@ def test_run_experiment_persists_results_per_condition():
 
 
 def test_same_transactions_across_conditions_are_reproducible():
-    """
-    Running the harness twice with the same seed and the same population
-    must give identical results — determinism end to end.
-    """
     db1 = make_test_session()
     db2 = make_test_session()
     try:

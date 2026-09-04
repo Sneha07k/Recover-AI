@@ -21,12 +21,6 @@ from app.models.models import (
     Transaction,
 )
 
-# StaticPool is essential here: without it, each new session opened
-# against "sqlite:///:memory:" gets its OWN separate, blank in-memory
-# database. Every earlier test file avoided this because each test used
-# exactly one session for its entire lifetime. Here we seed data in one
-# session, close it, then the API call opens a SECOND session — StaticPool
-# forces every connection to share the same actual in-memory database.
 engine = create_engine(
     "sqlite:///:memory:",
     connect_args={"check_same_thread": False},
@@ -45,12 +39,8 @@ def override_get_db():
 
 @pytest.fixture(autouse=True, scope="module")
 def override_dependency():
-    """
-    Swaps the app's real database dependency for our isolated in-memory
-    one, only for the duration of this test module — cleaned up
-    afterward so other test files aren't affected by this override.
-    """
-    from app.models import models  # noqa: F401 registers tables on Base
+   
+    from app.models import models  
 
     Base.metadata.create_all(bind=engine)
     app.dependency_overrides[get_db] = override_get_db

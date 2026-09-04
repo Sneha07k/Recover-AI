@@ -20,12 +20,7 @@ from app.models.models import (
 
 
 def build_audit_entry(db: Session, transaction_id: int) -> AuditTrailEntry | None:
-    """
-    Joins across every decision table for one transaction into a single,
-    denormalized, human-readable record. Each table stays separate in
-    storage (each engine only knows its own concern) — this function is
-    the one place that reassembles the full story for a reviewer.
-    """
+    
     transaction = db.get(Transaction, transaction_id)
     if transaction is None:
         return None

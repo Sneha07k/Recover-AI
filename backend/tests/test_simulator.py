@@ -5,14 +5,13 @@ from app.database import Base
 from app.models.enums import TransactionStatus
 from app.simulator.generator import run_simulation
 
-# Use an isolated in-memory database for tests so we never touch the real
-# data/recoverai.db file, and each test run starts from a clean slate.
+
 engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
 TestSession = sessionmaker(bind=engine)
 
 
 def setup_module(module):
-    from app.models import models  # noqa: F401 registers tables on Base
+    from app.models import models 
 
     Base.metadata.create_all(bind=engine)
 
@@ -47,9 +46,7 @@ def test_failure_rate_is_within_plausible_range():
         )
         failed = [t for t in transactions if t.status == TransactionStatus.FAILED]
         failure_rate = len(failed) / len(transactions)
-        # With our configured base rates and multipliers, overall failure
-        # rate should land roughly between 5% and 20%. This is a sanity
-        # check, not an exact assertion, since it's randomly generated.
+       
         assert 0.05 < failure_rate < 0.20
     finally:
         db.close()

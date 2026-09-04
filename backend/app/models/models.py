@@ -157,11 +157,9 @@ class PolicyDecision(Base):
     )
     strategy = Column(Enum(RecoveryStrategy), nullable=False, index=True)
     amount = Column(Float, nullable=False)
-    verdict = Column(String, nullable=False)  # "allow" / "deny" / "escalate"
-    # Only meaningful when verdict == "escalate". None means still pending
-    # human review — see app/api/escalations.py's approve/deny endpoints,
-    # which are the only code that ever sets these.
-    human_resolution = Column(String, nullable=True)  # "approved" / "denied" / None
+    verdict = Column(String, nullable=False)  
+    
+    human_resolution = Column(String, nullable=True)  
     resolved_at = Column(DateTime, nullable=True)
     reasons = Column(JSON, nullable=False, default=list)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
@@ -185,13 +183,6 @@ class ExperimentResult(Base):
 
 
 class RazorpayPaymentLink(Base):
-    """
-    A REAL Razorpay test-mode Payment Link created for a customer-facing
-    recovery strategy (INCENTIVE, CUSTOMER_REMINDER). This is a verifiable
-    side-artifact only — RecoverAI's simulator (Phase 9) remains the sole
-    source of truth for whether the recovery succeeded. Nothing in this
-    table is ever read back to decide simulated outcomes.
-    """
 
     __tablename__ = "razorpay_payment_links"
 

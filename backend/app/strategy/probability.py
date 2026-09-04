@@ -17,8 +17,7 @@ from app.risk.scoring import (
 
 logger = logging.getLogger("recoverai.strategy")
 
-# backend/app/strategy/probability.py -> parents[3] is the project root,
-# where data/ lives alongside backend/.
+
 MODEL_PATH = (
     Path(__file__).resolve().parents[3] / "data" / "models" / "recovery_model.pkl"
 )
@@ -26,48 +25,31 @@ MODEL_PATH = (
 
 @lru_cache(maxsize=1)
 def _load_model():
-    """
-    Loads the trained recovery model once and caches it for the life of
-    the process. Returns (None, None) if no model has been trained yet,
-    so callers fall back gracefully instead of crashing — the exact
-    situation a freshly deployed system would be in.
-    """
+  
     try:
         bundle = joblib.load(MODEL_PATH)
         return bundle["model"], bundle["feature_names"]
     except FileNotFoundError:
         logger.info(
-            "No trained recovery model found at %s — using rule-based fallback.",
+            
             MODEL_PATH,
         )
         return None, None
 
 
 def invalidate_model_cache() -> None:
-    """
-    Clears the cache above. Only matters for a long-running server process
-    (e.g. the deployed API): without this, training a NEW model after the
-    server has already started (and already cached "no model exists")
-    would silently never take effect, since @lru_cache would never
-    re-run _load_model(). CLI scripts never hit this — each one is a
-    fresh process — but the web "Train Model" action needs it.
-    """
+    
     _load_model.cache_clear()
 
 
 def _recovery_counts(db: Session, filter_clause, exclude_transaction_id):
-    """
-    Phase 13: was previously loading every matching RecoveryAttempt row
-    into Python just to count and sum() them by hand — O(n) row
-    materialization on every call. A single SQL-side aggregate query does
-    the same work entirely inside the database.
-    """
+    
     query = (
         db.query(
             func.count(RecoveryAttempt.id),
             func.coalesce(
                 func.sum(case((RecoveryAttempt.succeeded == True, 1), else_=0)), 0
-            ),  # noqa: E712
+            ),  
         )
         .join(Transaction, RecoveryAttempt.transaction_id == Transaction.id)
         .filter(filter_clause)
@@ -85,11 +67,7 @@ def build_live_features(
     amount: float,
     exclude_transaction_id: int | None = None,
 ) -> dict:
-    """
-    Computes the exact same features used at training time (see
-    app/ml/features.py), but for one live transaction right now, using
-    only historical data available up to this point.
-    """
+    
     customer_fail_rate, customer_total = historical_failure_rate_for_customer(
         db, customer_id, exclude_transaction_id
     )
@@ -130,16 +108,7 @@ def predict_recovery_probability(
     exclude_transaction_id: int | None = None,
     force_rule_based: bool = False,
 ) -> float:
-    """
-    Uses the trained ML model if one exists; otherwise falls back to the
-    Phase 4 rule-based estimate. This graceful degradation matters in
-    practice — a freshly deployed system has no trained model yet and
-    should still make sensible decisions instead of failing outright.
-
-    force_rule_based=True skips the model entirely even if one exists —
-    used by Phase 12's experimentation harness to isolate "how much does
-    the ML model itself help" as a controlled comparison.
-    """
+   
     if not force_rule_based:
         model, feature_names = _load_model()
         if model is not None:
@@ -152,9 +121,7 @@ def predict_recovery_probability(
             ).astype(float)
             numeric = row.drop(columns=["payment_method"])
             X = pd.concat([numeric, method_dummies], axis=1)
-            # Align columns exactly to what the model was trained on. Any
-            # payment method missing from this single row (or one the
-            # model never saw) gets filled with 0 rather than crashing.
+           
             X = X.reindex(columns=feature_names, fill_value=0.0)
             return float(model.predict_proba(X)[0, 1])
 

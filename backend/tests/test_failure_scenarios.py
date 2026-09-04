@@ -18,7 +18,7 @@ def make_test_session():
     engine = create_engine(
         "sqlite:///:memory:", connect_args={"check_same_thread": False}
     )
-    from app.models import models  # noqa: F401
+    from app.models import models 
 
     Base.metadata.create_all(bind=engine)
     Session = sessionmaker(bind=engine)
@@ -62,13 +62,7 @@ def make_transaction(
 
 
 def test_repeated_execution_naturally_hits_retry_limit():
-    """
-    Phase 8's original retry-limit test manually inserted RecoveryAttempt
-    rows to trigger the check. This confirms the same guardrail engages
-    correctly when attempts happen the real way — via repeated calls to
-    execute_strategy — regardless of whether each attempt individually
-    succeeds or fails (the limit counts ATTEMPTS, not failures).
-    """
+   
     db = make_test_session()
     try:
         merchant = make_merchant(db)
@@ -87,13 +81,7 @@ def test_repeated_execution_naturally_hits_retry_limit():
 
 
 def test_mixed_retry_family_strategies_share_the_same_limit():
-    """
-    The retry limit isn't per-strategy — RETRY, DELAYED_RETRY, and
-    ALTERNATE_PAYMENT all draw from the SAME counter for a transaction,
-    since they're all in RETRY_STRATEGIES. Three attempts using any mix
-    of these should still block a fourth, regardless of which specific
-    retry-family strategy is proposed next.
-    """
+    
     db = make_test_session()
     try:
         merchant = make_merchant(db)

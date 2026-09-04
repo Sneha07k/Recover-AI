@@ -7,9 +7,7 @@ from sklearn.preprocessing import StandardScaler
 from app.models.enums import PaymentMethod
 from app.risk.scoring import RECOVERY_PROBABILITY_BY_METHOD
 
-# Numeric features only â€” payment_method is categorical and gets one-hot
-# encoded separately. Note failure_type is NOT here: it's the simulator's
-# hidden ground truth, never a legitimate feature.
+
 FEATURE_COLUMNS_NUMERIC = [
     "amount",
     "customer_prior_transactions",
@@ -21,7 +19,6 @@ FEATURE_COLUMNS_NUMERIC = [
 
 
 def prepare_features(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
-    """One-hot encode payment_method, keep numeric features as-is."""
     method_dummies = pd.get_dummies(df["payment_method"], prefix="method").astype(float)
     X = pd.concat([df[FEATURE_COLUMNS_NUMERIC], method_dummies], axis=1)
     y = df["recovered"]
@@ -29,18 +26,7 @@ def prepare_features(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
 
 
 def train_and_evaluate(df: pd.DataFrame, n_splits: int = 5):
-    """
-    With only a few hundred labeled examples, one train/test split gives a
-    noisy performance estimate - try it twice with different random seeds
-    and watch the numbers swing wildly. K-fold cross-validation fixes this:
-    every example gets used as held-out test data exactly once (across
-    n_splits folds), so we evaluate on far more predictions overall while
-    still never letting a fold's own test rows influence its training.
-
-    StandardScaler lives inside the Pipeline so it's refit separately on
-    each fold's training portion - otherwise fitting it once on all the
-    data first would leak each fold's test statistics into training.
-    """
+    
     X, y = prepare_features(df)
 
     pipeline = Pipeline(
@@ -58,24 +44,12 @@ def train_and_evaluate(df: pd.DataFrame, n_splits: int = 5):
     cm = confusion_matrix(y, y_pred)
     auc = roc_auc_score(y, y_proba)
 
-    # Final model refit on ALL available data - this is the one we
-    # actually save and use, distinct from the fold models used only for
-    # evaluation above.
     final_pipeline = pipeline.fit(X, y)
 
     return final_pipeline, X.columns.tolist(), report, cm, auc
 
 
 def compute_rule_based_baseline_auc(df: pd.DataFrame) -> float:
-    """
-    Scores every example using ONLY the Phase 4 rule-based estimate
-    (RECOVERY_PROBABILITY_BY_METHOD — a fixed number per payment method,
-    no learning at all), then measures its ROC-AUC against the actual
-    outcomes. This is what "no ML model" would have achieved, computed
-    live on the exact same data the trained model just saw — the direct,
-    honest comparison behind Phase 12's finding that the simple rule-based
-    fallback can match or beat the trained model.
-    """
     scores = df["payment_method"].map(
         lambda m: RECOVERY_PROBABILITY_BY_METHOD[PaymentMethod(m)]
     )

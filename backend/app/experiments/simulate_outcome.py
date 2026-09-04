@@ -16,22 +16,7 @@ def simulate_recovery_outcome(
     strategy: RecoveryStrategy,
     amount: float,
 ) -> tuple[bool, float]:
-    """
-    Pure version of the Action Executor's outcome logic (Phase 9), taking
-    an explicit RNG instead of using global random state, and never
-    touching the database.
-
-    Why this matters for fair comparison: the FIRST draw (is this failure
-    secretly transient or permanent?) depends only on payment_method and
-    customer_type — NOT on the strategy. So if you call this function with
-    the same rng seed but a different strategy, you get the exact same
-    underlying "truth" about the failure both times. The SECOND draw (did
-    the attempt succeed?) is the same raw random number in both calls, but
-    compared against a different threshold — the chosen strategy's
-    probability_multiplier. A better strategy raises that threshold,
-    making the identical draw more likely to count as a success. This is
-    what makes cross-strategy comparison causal rather than coincidental.
-    """
+   
     transient_prob = TRANSIENT_PROBABILITY_BY_METHOD[payment_method]
     transient_prob += TRANSIENT_ADJUSTMENT_BY_CUSTOMER_TYPE[customer_type]
     transient_prob = min(max(transient_prob, 0.05), 0.95)

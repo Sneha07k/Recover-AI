@@ -44,9 +44,7 @@ def make_agent_decision(
         SYSTEM_PROMPT, user_message, tool_executor, client=client, trace=trace
     )
 
-    # Validate the model's structured output against our own schema before
-    # trusting any of it — a tool schema is a strong hint to the model,
-    # never a guarantee.
+   
     validated = AgentDecisionResult.model_validate(raw_result)
 
     decision = AgentDecision(
@@ -60,8 +58,6 @@ def make_agent_decision(
     db.add(decision)
     db.commit()
     db.refresh(decision)
-    # Transient attribute, not a DB column — just lets callers that want to
-    # show the agent's reasoning process (which tools it called, in what
-    # order, what it learned) do so without a schema change.
+
     decision.trace = trace
     return decision

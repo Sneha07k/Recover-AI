@@ -1,11 +1,3 @@
-"""
-Run with: python scripts/run_policy_demo.py
-
-Builds a small, controlled scenario for each of the required policy test
-cases and prints the verdict - independent of any simulation run, so the
-behavior here is exact and reproducible every time.
-"""
-
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -80,13 +72,13 @@ def main():
     db.commit()
     db.refresh(merchant)
 
-    # 1. Allowed retry - clean transaction, no history, nothing flagged.
+   
     customer = make_customer(db, merchant.id)
     txn = make_transaction(db, customer.id, amount=500.0)
     result = evaluate_policy(db, customer.id, txn.id, RecoveryStrategy.RETRY, 500.0)
     show("1. Allowed retry", result)
 
-    # 2. Retry limit exceeded - this transaction already has MAX_RETRIES attempts.
+    
     customer = make_customer(db, merchant.id)
     txn = make_transaction(db, customer.id, amount=500.0)
     for _ in range(3):
@@ -102,13 +94,13 @@ def main():
     result = evaluate_policy(db, customer.id, txn.id, RecoveryStrategy.RETRY, 500.0)
     show("2. Retry limit exceeded", result)
 
-    # 3. High-value payment - above HIGH_VALUE_TRANSACTION_THRESHOLD.
+    
     customer = make_customer(db, merchant.id)
     txn = make_transaction(db, customer.id, amount=30_000.0)
     result = evaluate_policy(db, customer.id, txn.id, RecoveryStrategy.RETRY, 30_000.0)
     show("3. High-value payment", result)
 
-    # 4. Too many interventions - customer already had 2 today.
+   
     customer = make_customer(db, merchant.id)
     txn = make_transaction(db, customer.id, amount=500.0)
     for _ in range(2):
@@ -129,9 +121,7 @@ def main():
     result = evaluate_policy(db, customer.id, txn.id, RecoveryStrategy.RETRY, 500.0)
     show("4. Too many interventions today", result)
 
-    # 5. Excessive discount - hypothetical strategy offering more than MAX_DISCOUNT.
-    #    (Our current INCENTIVE definition is exactly at the limit, so this
-    #    demonstrates the check by temporarily using a harsher discount.)
+    
     from app.strategy.definitions import STRATEGY_DEFINITIONS, StrategyParams
 
     original = STRATEGY_DEFINITIONS[RecoveryStrategy.INCENTIVE]
@@ -144,13 +134,13 @@ def main():
     show("5. Excessive discount", result)
     STRATEGY_DEFINITIONS[RecoveryStrategy.INCENTIVE] = original  # restore
 
-    # 6. Customer opt-out - customer-facing strategy on an opted-out customer.
+    
     customer = make_customer(db, merchant.id, opted_out=True)
     txn = make_transaction(db, customer.id, amount=500.0)
     result = evaluate_policy(db, customer.id, txn.id, RecoveryStrategy.INCENTIVE, 500.0)
     show("6. Customer opt-out", result)
 
-    # 7. Invalid action - not a recognized strategy at all.
+    
     customer = make_customer(db, merchant.id)
     txn = make_transaction(db, customer.id, amount=500.0)
     result = evaluate_policy(db, customer.id, txn.id, "teleport_the_money", 500.0)

@@ -79,12 +79,7 @@ class PolicyDecisionOut(BaseModel):
 
 
 class RecoveryAttemptOut(BaseModel):
-    """
-    Note: failure_type is the simulator's hidden ground truth (see
-    app/simulator/ground_truth.py) — never usable as a model feature, but
-    perfectly fine to show a human auditor reviewing why a decision played
-    out the way it did. Same field, opposite rule, different audience.
-    """
+   
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -98,12 +93,7 @@ class RecoveryAttemptOut(BaseModel):
 
 
 class AuditTrailEntry(BaseModel):
-    """
-    The full explainable decision trail for one transaction: what
-    RecoverAI detected, diagnosed, decided, was authorized to do, and
-    what actually happened. Powers the dashboard's "click a transaction,
-    see everything" view (Phase 11).
-    """
+    
 
     transaction: TransactionOut
     risk_assessment: Optional[RiskAssessmentOut] = None

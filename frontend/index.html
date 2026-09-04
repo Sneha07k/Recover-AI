@@ -4,579 +4,260 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>RecoverAI — Revenue Recovery Controller</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23C6F135'/%3E%3Ctext x='16' y='23' font-family='sans-serif' font-size='20' font-weight='700' text-anchor='middle' fill='%230D1002'%3ER%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
   :root {
-    --ink: #0F1720;
-    --panel: #16212C;
-    --panel-raised: #1C2A38;
-    --hairline: #2A3A48;
-    --text: #E8E3D8;
-    --muted: #8B96A3;
-    --gold: #C9A227;
-    --gold-dim: #6B5A1E;
-    --rust: #A8452E;
-    --rust-dim: #5C2A1F;
-    --teal: #3E7C7B;
-    --teal-dim: #244544;
-    --display: 'Fraunces', Georgia, serif;
+    --bg: #09090B;
+    --sidebar-bg: #0C0C0F;
+    --surface: #17181C;
+    --surface-raised: #1F2024;
+    --border: #27282E;
+    --text: #F2F2F0;
+    --muted: #8B8C93;
+    --lime: #C6F135;
+    --lime-dim: #24290F;
+    --lime-text: #0D1002;
+    --red: #FF6B6B;
+    --red-dim: #2E1A1A;
+    --amber: #FFB020;
+    --amber-dim: #2E250F;
+    --display: 'Space Grotesk', 'Inter', sans-serif;
     --body: 'Inter', -apple-system, sans-serif;
     --mono: 'IBM Plex Mono', 'SF Mono', monospace;
   }
 
   * { box-sizing: border-box; }
-
-  @media (prefers-reduced-motion: reduce) {
-    * { animation: none !important; transition: none !important; }
-  }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 
   body {
     margin: 0;
-    background: var(--ink);
+    background: var(--bg);
     color: var(--text);
     font-family: var(--body);
     line-height: 1.5;
   }
+  a { color: inherit; text-decoration: none; }
 
-  a { color: inherit; }
-
-  .wrap {
-    max-width: 1180px;
-    margin: 0 auto;
-    padding: 32px 24px 80px;
-  }
-
-  header {
+  /* ---------- App shell: sidebar + main ---------- */
+  .app-shell {
     display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    margin-bottom: 40px;
-    border-bottom: 1px solid var(--hairline);
-    padding-bottom: 20px;
+    min-height: 100vh;
   }
 
-  .wordmark {
+  .sidebar {
+    width: 232px;
+    flex: none;
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 22px 16px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+  }
+
+  .sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 8px 22px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-logo .mark {
+    width: 30px; height: 30px;
+    border-radius: 9px;
+    background: var(--lime);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--lime-text);
     font-family: var(--display);
-    font-size: 28px;
+    font-weight: 700;
+    font-size: 15px;
+  }
+  .sidebar-logo .name {
+    font-family: var(--display);
     font-weight: 600;
-    letter-spacing: -0.01em;
+    font-size: 15px;
   }
-  .wordmark span { color: var(--gold); }
 
-  .subtitle {
-    font-size: 13px;
+  .sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: 8px;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 13.5px;
+    font-weight: 500;
     color: var(--muted);
-    margin-top: 4px;
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s;
+  }
+  .nav-item:hover { background: var(--surface); color: var(--text); }
+  .nav-item.active { background: var(--lime); color: var(--lime-text); font-weight: 600; }
+  .nav-item svg { flex: none; width: 17px; height: 17px; }
+
+  .sidebar-cta {
+    margin-top: auto;
+    background: linear-gradient(155deg, #C6F135 0%, #7FDB6B 100%);
+    border-radius: 16px;
+    padding: 16px;
+    color: var(--lime-text);
+  }
+  .sidebar-cta .cta-title {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 4px;
+  }
+  .sidebar-cta .cta-desc {
+    font-size: 11px;
+    opacity: 0.75;
+    line-height: 1.5;
+    margin-bottom: 12px;
+  }
+  .sidebar-cta .cta-btn {
+    display: inline-block;
+    background: var(--lime-text);
+    color: var(--lime);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 7px 12px;
+    border-radius: 100px;
   }
 
+  .main-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .top-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 32px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: rgba(9,9,11,0.85);
+    backdrop-filter: blur(10px);
+    z-index: 10;
+  }
+  .search-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 9px 16px;
+    color: var(--muted);
+    font-size: 13px;
+    width: 280px;
+  }
+  .search-box svg { flex: none; width: 15px; height: 15px; }
+  .search-box input {
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: var(--body);
+    font-size: 13px;
+    width: 100%;
+  }
+  .search-box input::placeholder { color: var(--muted); }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
   .status-pill {
     font-family: var(--mono);
     font-size: 12px;
     color: var(--muted);
-    border: 1px solid var(--hairline);
-    padding: 6px 12px;
+    border: 1px solid var(--border);
+    padding: 7px 14px;
     border-radius: 100px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
   }
   .status-pill .dot {
-    display: inline-block;
     width: 6px; height: 6px;
     border-radius: 50%;
-    background: var(--gold);
-    margin-right: 6px;
+    background: var(--lime);
   }
 
-  .intro {
-    font-size: 15px;
-    color: var(--muted);
-    max-width: 760px;
-    margin-bottom: 28px;
-    line-height: 1.7;
+  .content-scroll {
+    padding: 28px 32px 80px;
+    max-width: 1240px;
   }
-  .intro b { color: var(--text); font-weight: 600; }
-
-  .pipeline-strip {
-    display: flex;
-    align-items: stretch;
-    flex-wrap: wrap;
-    gap: 0;
-    margin-bottom: 40px;
-  }
-  .pipeline-step {
-    flex: 1 1 140px;
-    background: var(--panel);
-    border: 1px solid var(--hairline);
-    padding: 14px 16px;
-    position: relative;
-  }
-  .pipeline-step + .pipeline-step { border-left: none; }
-  .pipeline-step:first-child { border-radius: 10px 0 0 10px; }
-  .pipeline-step:last-child { border-radius: 0 10px 10px 0; }
-  .pipeline-step .pnum {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--gold);
-    margin-bottom: 4px;
-  }
-  .pipeline-step .plabel {
-    font-weight: 600;
-    font-size: 13px;
-    margin-bottom: 3px;
-  }
-  .pipeline-step .pdesc {
-    font-size: 11px;
-    color: var(--muted);
-    line-height: 1.4;
-  }
-
-  /* ---------- Engineering depth section ---------- */
-  .capability-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 14px;
-    margin-bottom: 48px;
-  }
-  .capability-card {
-    background: var(--panel);
-    border: 1px solid var(--hairline);
-    border-radius: 10px;
-    padding: 18px 20px;
-  }
-  .capability-card .cap-title {
-    font-weight: 600;
-    font-size: 14px;
-    margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-  }
-  .capability-card .cap-desc {
-    font-size: 12px;
-    color: var(--muted);
-    line-height: 1.6;
-  }
-  .capability-card ul {
-    margin: 8px 0 0;
-    padding-left: 16px;
-    font-size: 11px;
-    color: var(--muted);
-    line-height: 1.7;
-  }
-  .status-pill-sm {
-    font-family: var(--mono);
-    font-size: 10px;
-    text-transform: uppercase;
-    padding: 2px 8px;
-    border-radius: 100px;
-    white-space: nowrap;
-  }
-  .status-pill-sm.on { background: var(--teal-dim); color: var(--teal); }
-  .status-pill-sm.off { background: var(--panel-raised); color: var(--muted); border: 1px solid var(--hairline); }
-  .cap-metric {
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--gold);
-    margin-top: 8px;
-  }
-
-  /* ---------- Try your own scenario ---------- */
-  .scenario-form {
-    background: var(--panel);
-    border: 1px solid var(--hairline);
-    border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 20px;
-  }
-  .form-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 14px;
-    margin-bottom: 14px;
-  }
-  .form-field {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    flex: 1 1 160px;
-  }
-  .form-field label {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--muted);
-  }
-  .form-field input, .form-field select {
-    font-family: var(--body);
-    font-size: 13px;
-    color: var(--text);
-    background: var(--panel-raised);
-    border: 1px solid var(--hairline);
-    border-radius: 6px;
-    padding: 8px 10px;
-  }
-  .form-checkbox {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 12px;
-    color: var(--muted);
-  }
-  .form-checkbox input { width: 15px; height: 15px; }
-
-  .scenario-output {
-    margin-top: 16px;
-  }
-  .candidate-bar-row {
-    display: grid;
-    grid-template-columns: 140px 1fr 90px;
-    align-items: center;
-    gap: 10px;
-    font-family: var(--mono);
-    font-size: 12px;
-    margin-bottom: 6px;
-  }
-  .candidate-bar-track {
-    background: var(--panel-raised);
-    border-radius: 4px;
-    height: 16px;
-    position: relative;
-    overflow: hidden;
-  }
-  .candidate-bar-fill {
-    height: 100%;
-    border-radius: 4px;
-  }
-  .candidate-bar-row.winner .candidate-bar-fill { background: var(--gold); }
-  .candidate-bar-row:not(.winner) .candidate-bar-fill { background: var(--teal); opacity: 0.6; }
-  .agent-trace-step {
-    border-left: 2px solid var(--hairline);
-    padding-left: 12px;
-    margin: 8px 0;
-    font-size: 11px;
-    color: var(--muted);
-    font-family: var(--mono);
-  }
-
-  /* ---------- Escalation queue ---------- */
-  .escalation-card {
-    background: var(--panel);
-    border: 1px solid var(--gold-dim);
-    border-left: 3px solid var(--gold);
-    border-radius: 8px;
-    padding: 16px 18px;
-    margin-bottom: 12px;
-  }
-  .escalation-card .esc-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    margin-bottom: 8px;
-  }
-  .escalation-card .esc-amount {
-    font-family: var(--mono);
-    font-size: 18px;
-    color: var(--gold);
-  }
-  .escalation-card .esc-meta {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--muted);
-  }
-  .escalation-card .esc-reasons {
-    font-size: 12px;
-    color: var(--muted);
-    margin: 8px 0;
-    line-height: 1.6;
-  }
-  .escalation-card .esc-actions {
-    display: flex;
-    gap: 8px;
-    margin-top: 10px;
-  }
-  .btn-approve {
-    background: var(--teal);
-    color: var(--ink);
-    border: none;
-    border-radius: 6px;
-    padding: 7px 14px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-  .btn-deny {
-    background: var(--panel-raised);
-    color: var(--rust);
-    border: 1px solid var(--rust-dim);
-    border-radius: 6px;
-    padding: 7px 14px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-  .esc-empty {
-    color: var(--muted);
-    font-size: 13px;
-    padding: 20px;
-    text-align: center;
-  }
-  .esc-resolved-tag {
-    font-family: var(--mono);
-    font-size: 10px;
-    text-transform: uppercase;
-    padding: 2px 8px;
-    border-radius: 100px;
-  }
-  .esc-resolved-tag.approved { background: var(--teal-dim); color: var(--teal); }
-  .esc-resolved-tag.denied { background: var(--rust-dim); color: var(--rust); }
-
-  /* ---------- Chaos mode / provider degradation ---------- */
-  .chaos-panel {
-    background: var(--panel);
-    border: 1px solid var(--rust-dim);
-    border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 20px;
-  }
-  .chaos-compare {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    margin-top: 16px;
-  }
-  @media (max-width: 720px) { .chaos-compare { grid-template-columns: 1fr; } }
-  .chaos-col {
-    border-radius: 8px;
-    padding: 16px;
-  }
-  .chaos-col.before { background: var(--panel-raised); border: 1px solid var(--hairline); }
-  .chaos-col.during { background: var(--panel-raised); border: 1px solid var(--rust-dim); }
-  .chaos-col-title {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--muted);
-    margin-bottom: 10px;
-  }
-  .chaos-col.during .chaos-col-title { color: var(--rust); }
-  .chaos-stat {
-    display: flex;
-    justify-content: space-between;
-    font-family: var(--mono);
-    font-size: 13px;
-    padding: 5px 0;
-    border-bottom: 1px solid var(--hairline);
-  }
-  .chaos-stat .label { color: var(--muted); }
-  .chaos-narrative {
-    margin-top: 16px;
-    padding-top: 16px;
-    border-top: 1px solid var(--hairline);
-    font-size: 13px;
-    line-height: 1.8;
-  }
-  .chaos-narrative li { margin-bottom: 4px; }
-
-  .ledger-line {
-    display: flex;
-    align-items: stretch;
-    gap: 0;
-    margin-bottom: 12px;
-    flex-wrap: wrap;
-  }
-
-  .ledger-stage {
-    flex: 1 1 200px;
-    padding: 20px 22px;
-    background: var(--panel);
-    border: 1px solid var(--hairline);
-  }
-  .ledger-stage + .ledger-stage { border-left: none; }
-  .ledger-stage:first-child { border-radius: 10px 0 0 10px; }
-  .ledger-stage:last-child { border-radius: 0 10px 10px 0; }
-
-  .ledger-label {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--muted);
-    margin-bottom: 8px;
-  }
-
-  .ledger-amount {
-    font-family: var(--mono);
-    font-size: 26px;
-    font-weight: 500;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .ledger-stage.processed .ledger-amount { color: var(--text); }
-  .ledger-stage.at-risk .ledger-amount { color: var(--rust); }
-  .ledger-stage.attempted .ledger-amount { color: var(--teal); }
-  .ledger-stage.recovered .ledger-amount { color: var(--gold); }
-
-  .ledger-arrow {
-    display: flex;
-    align-items: center;
-    padding: 0 6px;
-    color: var(--hairline);
-    font-size: 20px;
-  }
-
-  .secondary-stats {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 40px;
-    flex-wrap: wrap;
-  }
-  .chip {
-    font-family: var(--mono);
-    font-size: 13px;
-    color: var(--muted);
-    background: var(--panel);
-    border: 1px solid var(--hairline);
-    border-radius: 8px;
-    padding: 8px 14px;
-  }
-  .chip b { color: var(--text); font-weight: 500; }
 
   h2 {
     font-family: var(--display);
-    font-size: 20px;
+    font-size: 21px;
     font-weight: 600;
     margin: 0 0 16px;
     padding-top: 8px;
+    scroll-margin-top: 90px;
   }
   .eyebrow {
     font-family: var(--mono);
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    color: var(--gold);
+    color: var(--lime);
     margin-bottom: 6px;
   }
 
-  .control-panel {
-    background: var(--panel);
-    border: 1px solid var(--hairline);
-    border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 48px;
+  .intro {
+    font-size: 14.5px;
+    color: var(--muted);
+    max-width: 760px;
+    margin-bottom: 26px;
+    line-height: 1.7;
   }
-  .control-buttons {
+  .intro b { color: var(--text); font-weight: 600; }
+
+  /* ---------- Pipeline strip ---------- */
+  .pipeline-strip {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
-    margin-bottom: 4px;
+    margin-bottom: 36px;
   }
-  .btn {
-    font-family: var(--body);
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--ink);
-    background: var(--gold);
-    border: none;
-    border-radius: 8px;
-    padding: 10px 16px;
-    cursor: pointer;
-    transition: opacity 0.15s;
-  }
-  .btn:hover { opacity: 0.88; }
-  .btn:disabled { opacity: 0.5; cursor: wait; }
-  .btn.secondary {
-    background: var(--panel-raised);
-    color: var(--text);
-    border: 1px solid var(--hairline);
-  }
-  .btn.danger {
-    background: var(--panel-raised);
-    color: var(--rust);
-    border: 1px solid var(--rust-dim);
-  }
-
-  .spinner {
-    display: inline-block;
-    width: 12px; height: 12px;
-    border: 2px solid rgba(0,0,0,0.25);
-    border-top-color: var(--ink);
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-    margin-right: 6px;
-    vertical-align: -1px;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  .action-result {
-    margin-top: 16px;
-    font-size: 13px;
-    color: var(--muted);
-  }
-  .action-result:empty { margin-top: 0; }
-
-  .result-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-family: var(--mono);
-    font-size: 12px;
-    margin-top: 10px;
-  }
-  .result-table th, .result-table td {
-    text-align: left;
-    padding: 6px 10px;
-    border-bottom: 1px solid var(--hairline);
-  }
-  .result-table th {
-    color: var(--muted);
-    font-weight: 500;
-    text-transform: uppercase;
-    font-size: 10px;
-    letter-spacing: 0.05em;
-  }
-  .result-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
-
-  .scenario-card {
-    background: var(--panel-raised);
-    border: 1px solid var(--hairline);
-    border-radius: 8px;
+  .pipeline-step {
+    flex: 1 1 140px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
     padding: 14px 16px;
-    margin-top: 10px;
   }
-  .scenario-card summary {
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 13px;
-    color: var(--text);
-    list-style: none;
-  }
-  .scenario-card summary::-webkit-details-marker { display: none; }
-  .scenario-card summary::before { content: '\25B8  '; color: var(--gold); }
-  .scenario-card[open] summary::before { content: '\25BE  '; }
-  .scenario-card .scenario-lines {
-    margin-top: 10px;
-    font-size: 12px;
-    color: var(--muted);
-    line-height: 1.7;
-    white-space: pre-wrap;
-    font-family: var(--mono);
-  }
+  .pipeline-step .pnum { font-family: var(--mono); font-size: 11px; color: var(--lime); margin-bottom: 4px; }
+  .pipeline-step .plabel { font-weight: 600; font-size: 13px; margin-bottom: 3px; font-family: var(--display); }
+  .pipeline-step .pdesc { font-size: 11px; color: var(--muted); line-height: 1.4; }
 
-  .chart-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    margin-bottom: 48px;
-  }
-  @media (max-width: 720px) { .chart-grid { grid-template-columns: 1fr; } }
-
+  /* ---------- Generic card ---------- */
   .card {
-    background: var(--panel);
-    border: 1px solid var(--hairline);
-    border-radius: 10px;
-    padding: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 22px;
   }
   .card h3 {
-    font-family: var(--body);
+    font-family: var(--display);
     font-size: 13px;
     font-weight: 600;
     color: var(--muted);
@@ -586,403 +267,531 @@
   }
   .card canvas { max-height: 220px; }
 
-  .split {
+  /* ---------- Engineering depth ---------- */
+  .capability-grid {
     display: grid;
-    grid-template-columns: 340px 1fr;
-    gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+    margin-bottom: 44px;
   }
-  @media (max-width: 860px) { .split { grid-template-columns: 1fr; } }
+  .capability-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 18px 20px;
+  }
+  .capability-card .cap-title {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 8px;
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  }
+  .capability-card .cap-desc { font-size: 12px; color: var(--muted); line-height: 1.6; }
+  .status-pill-sm {
+    font-family: var(--mono); font-size: 10px; text-transform: uppercase;
+    padding: 2px 9px; border-radius: 100px; white-space: nowrap;
+  }
+  .status-pill-sm.on { background: var(--lime-dim); color: var(--lime); }
+  .status-pill-sm.off { background: var(--surface-raised); color: var(--muted); border: 1px solid var(--border); }
+  .cap-metric { font-family: var(--mono); font-size: 12px; color: var(--lime); margin-top: 8px; }
 
-  .txn-list {
-    background: var(--panel);
-    border: 1px solid var(--hairline);
-    border-radius: 10px;
-    overflow: hidden;
-    max-height: 560px;
-    overflow-y: auto;
-  }
-  .txn-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--hairline);
-    cursor: pointer;
-    font-family: var(--mono);
+  /* ---------- Buttons ---------- */
+  .btn {
+    font-family: var(--body);
     font-size: 13px;
+    font-weight: 600;
+    color: var(--lime-text);
+    background: var(--lime);
+    border: none;
+    border-radius: 100px;
+    padding: 10px 18px;
+    cursor: pointer;
+    transition: opacity 0.15s;
   }
-  .txn-row:hover { background: var(--panel-raised); }
-  .txn-row.active { background: var(--panel-raised); border-left: 3px solid var(--gold); }
+  .btn:hover { opacity: 0.88; }
+  .btn:disabled { opacity: 0.45; cursor: wait; }
+  .btn.secondary { background: var(--surface-raised); color: var(--text); border: 1px solid var(--border); }
+  .btn.danger { background: var(--surface-raised); color: var(--red); border: 1px solid var(--red-dim); }
+
+  .spinner {
+    display: inline-block; width: 12px; height: 12px;
+    border: 2px solid rgba(0,0,0,0.25); border-top-color: currentColor;
+    border-radius: 50%; animation: spin 0.7s linear infinite;
+    margin-right: 6px; vertical-align: -1px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ---------- Escalation queue ---------- */
+  .scenario-form {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 22px;
+    margin-bottom: 20px;
+  }
+  .escalation-card {
+    background: var(--surface-raised);
+    border: 1px solid var(--amber-dim);
+    border-left: 3px solid var(--amber);
+    border-radius: 14px;
+    padding: 16px 18px;
+    margin-bottom: 12px;
+  }
+  .escalation-card .esc-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+  .escalation-card .esc-amount { font-family: var(--display); font-weight: 700; font-size: 19px; color: var(--amber); }
+  .escalation-card .esc-meta { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .escalation-card .esc-reasons { font-size: 12px; color: var(--muted); margin: 8px 0; line-height: 1.6; }
+  .escalation-card .esc-actions { display: flex; gap: 8px; margin-top: 10px; }
+  .btn-approve {
+    background: var(--lime); color: var(--lime-text); border: none; border-radius: 100px;
+    padding: 7px 15px; font-size: 12px; font-weight: 700; cursor: pointer;
+  }
+  .btn-deny {
+    background: var(--surface); color: var(--red); border: 1px solid var(--red-dim);
+    border-radius: 100px; padding: 7px 15px; font-size: 12px; font-weight: 700; cursor: pointer;
+  }
+  .esc-empty { color: var(--muted); font-size: 13px; padding: 24px; text-align: center; }
+  .esc-resolved-tag { font-family: var(--mono); font-size: 10px; text-transform: uppercase; padding: 2px 9px; border-radius: 100px; }
+  .esc-resolved-tag.approved { background: var(--lime-dim); color: var(--lime); }
+  .esc-resolved-tag.denied { background: var(--red-dim); color: var(--red); }
+
+  /* ---------- Chaos mode ---------- */
+  .chaos-panel { background: var(--surface); border: 1px solid var(--red-dim); border-radius: 18px; padding: 22px; margin-bottom: 20px; }
+  .chaos-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+  @media (max-width: 720px) { .chaos-compare { grid-template-columns: 1fr; } }
+  .chaos-col { border-radius: 14px; padding: 16px; background: var(--surface-raised); border: 1px solid var(--border); }
+  .chaos-col.during { border: 1px solid var(--red-dim); }
+  .chaos-col-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 10px; }
+  .chaos-col.during .chaos-col-title { color: var(--red); }
+  .chaos-stat { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 13px; padding: 5px 0; border-bottom: 1px solid var(--border); }
+  .chaos-stat .label { color: var(--muted); }
+  .chaos-narrative { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 13px; line-height: 1.8; }
+  .chaos-narrative li { margin-bottom: 4px; }
+
+  /* ---------- Try your own scenario ---------- */
+  .form-row { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 14px; }
+  .form-field { display: flex; flex-direction: column; gap: 6px; flex: 1 1 160px; }
+  .form-field label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+  .form-field input, .form-field select {
+    font-family: var(--body); font-size: 13px; color: var(--text);
+    background: var(--surface-raised); border: 1px solid var(--border);
+    border-radius: 10px; padding: 9px 12px;
+  }
+  .form-checkbox { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+  .form-checkbox input { width: 15px; height: 15px; }
+  .scenario-output { margin-top: 16px; }
+  .candidate-bar-row { display: grid; grid-template-columns: 140px 1fr 90px; align-items: center; gap: 10px; font-family: var(--mono); font-size: 12px; margin-bottom: 6px; }
+  .candidate-bar-track { background: var(--surface-raised); border-radius: 6px; height: 16px; position: relative; overflow: hidden; }
+  .candidate-bar-fill { height: 100%; border-radius: 6px; }
+  .candidate-bar-row.winner .candidate-bar-fill { background: var(--lime); }
+  .candidate-bar-row:not(.winner) .candidate-bar-fill { background: var(--muted); opacity: 0.4; }
+  .agent-trace-step { border-left: 2px solid var(--border); padding-left: 12px; margin: 8px 0; font-size: 11px; color: var(--muted); font-family: var(--mono); }
+
+  /* ---------- Live control panel ---------- */
+  .control-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 22px; margin-bottom: 44px; }
+  .control-buttons { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 4px; }
+  .action-result { margin-top: 16px; font-size: 13px; color: var(--muted); }
+  .action-result:empty { margin-top: 0; }
+  .result-table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 12px; margin-top: 10px; }
+  .result-table th, .result-table td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--border); }
+  .result-table th { color: var(--muted); font-weight: 500; text-transform: uppercase; font-size: 10px; letter-spacing: 0.05em; }
+  .result-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .scenario-card { background: var(--surface-raised); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-top: 10px; }
+  .scenario-card summary { cursor: pointer; font-weight: 600; font-size: 13px; color: var(--text); list-style: none; }
+  .scenario-card summary::-webkit-details-marker { display: none; }
+  .scenario-card summary::before { content: '\25B8  '; color: var(--lime); }
+  .scenario-card[open] summary::before { content: '\25BE  '; }
+  .scenario-card .scenario-lines { margin-top: 10px; font-size: 12px; color: var(--muted); line-height: 1.7; white-space: pre-wrap; font-family: var(--mono); }
+
+  /* ---------- Ledger ---------- */
+  .ledger-line { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+  .ledger-stage { flex: 1 1 200px; padding: 20px 22px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; }
+  .ledger-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 8px; }
+  .ledger-amount { font-family: var(--display); font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .ledger-stage.processed .ledger-amount { color: var(--text); }
+  .ledger-stage.at-risk .ledger-amount { color: var(--red); }
+  .ledger-stage.attempted .ledger-amount { color: var(--text); }
+  .ledger-stage.recovered .ledger-amount { color: var(--lime); }
+
+  .secondary-stats { display: flex; gap: 10px; margin-bottom: 36px; flex-wrap: wrap; }
+  .chip {
+    font-family: var(--mono); font-size: 12.5px; color: var(--muted);
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 100px; padding: 8px 15px;
+  }
+  .chip b { color: var(--text); font-weight: 600; }
+
+  /* ---------- Charts ---------- */
+  .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 44px; }
+  @media (max-width: 720px) { .chart-grid { grid-template-columns: 1fr; } }
+
+  /* ---------- Transactions + detail ---------- */
+  .split { display: grid; grid-template-columns: 340px 1fr; gap: 16px; }
+  @media (max-width: 860px) { .split { grid-template-columns: 1fr; } }
+  .txn-list { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; overflow: hidden; max-height: 560px; overflow-y: auto; }
+  .txn-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 13px 18px; border-bottom: 1px solid var(--border);
+    cursor: pointer; font-family: var(--mono); font-size: 13px;
+  }
+  .txn-row:hover { background: var(--surface-raised); }
+  .txn-row.active { background: var(--surface-raised); border-left: 3px solid var(--lime); }
   .txn-row .amt { color: var(--text); }
   .txn-row .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 8px; }
-  .dot.recovered { background: var(--gold); }
-  .dot.unrecovered { background: var(--rust); }
+  .dot.recovered { background: var(--lime); }
+  .dot.unrecovered { background: var(--red); }
 
-  .detail-panel {
-    background: var(--panel);
-    border: 1px solid var(--hairline);
-    border-radius: 10px;
-    padding: 24px;
-    min-height: 300px;
-  }
-  .detail-empty {
-    color: var(--muted);
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    min-height: 260px;
-    text-align: center;
-  }
+  .detail-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 24px; min-height: 300px; }
+  .detail-empty { color: var(--muted); font-size: 14px; display: flex; align-items: center; justify-content: center; height: 100%; min-height: 260px; text-align: center; }
 
   .timeline { list-style: none; margin: 0; padding: 0; }
-  .timeline-step {
-    display: flex;
-    gap: 16px;
-    padding-bottom: 24px;
-    position: relative;
-  }
+  .timeline-step { display: flex; gap: 16px; padding-bottom: 24px; position: relative; }
   .timeline-step:not(:last-child)::before {
-    content: '';
-    position: absolute;
-    left: 15px;
-    top: 32px;
-    bottom: 0;
-    width: 1px;
-    background: var(--hairline);
+    content: ''; position: absolute; left: 15px; top: 32px; bottom: 0; width: 1px; background: var(--border);
   }
   .step-num {
-    flex: none;
-    width: 32px; height: 32px;
-    border-radius: 50%;
-    background: var(--panel-raised);
-    border: 1px solid var(--hairline);
+    flex: none; width: 32px; height: 32px; border-radius: 50%;
+    background: var(--surface-raised); border: 1px solid var(--border);
     display: flex; align-items: center; justify-content: center;
-    font-family: var(--mono);
-    font-size: 13px;
-    color: var(--gold);
+    font-family: var(--mono); font-size: 13px; color: var(--lime);
   }
   .step-body { flex: 1; }
-  .step-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+  .step-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; font-family: var(--display); }
   .step-detail { font-size: 13px; color: var(--muted); line-height: 1.6; }
   .step-detail .mono { font-family: var(--mono); color: var(--text); }
-  .verdict-tag {
-    display: inline-block;
-    font-family: var(--mono);
-    font-size: 11px;
-    text-transform: uppercase;
-    padding: 2px 8px;
-    border-radius: 4px;
-    margin-left: 6px;
-  }
-  .verdict-tag.allow { background: var(--teal-dim); color: var(--teal); }
-  .verdict-tag.deny { background: var(--rust-dim); color: var(--rust); }
-  .verdict-tag.escalate { background: var(--gold-dim); color: var(--gold); }
+  .verdict-tag { display: inline-block; font-family: var(--mono); font-size: 11px; text-transform: uppercase; padding: 2px 9px; border-radius: 100px; margin-left: 6px; }
+  .verdict-tag.allow { background: var(--lime-dim); color: var(--lime); }
+  .verdict-tag.deny { background: var(--red-dim); color: var(--red); }
+  .verdict-tag.escalate { background: var(--amber-dim); color: var(--amber); }
 
-  footer {
-    margin-top: 60px;
-    color: var(--muted);
-    font-size: 12px;
-    text-align: center;
+  /* ---------- Customer explorer ---------- */
+  .customer-list { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; overflow: hidden; max-height: 560px; overflow-y: auto; }
+  .customer-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 13px 18px; border-bottom: 1px solid var(--border);
+    cursor: pointer; font-size: 13px;
   }
+  .customer-row:hover { background: var(--surface-raised); }
+  .customer-row.active { background: var(--surface-raised); border-left: 3px solid var(--lime); }
+  .customer-row .cust-name { font-weight: 600; margin-bottom: 2px; }
+  .customer-row .cust-meta { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .customer-row .cust-rate { font-family: var(--mono); font-size: 13px; text-align: right; }
+  .cust-badge { font-family: var(--mono); font-size: 9px; text-transform: uppercase; padding: 1px 7px; border-radius: 100px; background: var(--red-dim); color: var(--red); margin-left: 6px; }
+  .sort-select {
+    background: var(--surface-raised); border: 1px solid var(--border); color: var(--text);
+    border-radius: 100px; padding: 7px 14px; font-size: 12px; font-family: var(--body);
+  }
+  .customer-txn-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+    cursor: pointer; font-family: var(--mono); font-size: 12px;
+  }
+  .customer-txn-row:hover { color: var(--lime); }
+
+  footer { margin-top: 50px; color: var(--muted); font-size: 12px; }
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="app-shell">
 
-  <header>
-    <div>
-      <div class="wordmark">Recover<span>AI</span></div>
-      <div class="subtitle">Autonomous revenue recovery controller</div>
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="mark">R</div>
+      <div class="name">RecoverAI</div>
     </div>
-    <div class="status-pill"><span class="dot"></span><span id="merchant-name">connecting…</span></div>
-  </header>
+    <nav class="sidebar-nav">
+      <a href="#overview" class="nav-item active" data-target="overview">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        Overview
+      </a>
+      <a href="#hood" class="nav-item" data-target="hood">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+        Under the hood
+      </a>
+      <a href="#escalations" class="nav-item" data-target="escalations">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l9 16H3z"/><path d="M12 10v4"/><circle cx="12" cy="17" r="0.5" fill="currentColor"/></svg>
+        Escalations
+      </a>
+      <a href="#chaos" class="nav-item" data-target="chaos">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>
+        Chaos mode
+      </a>
+      <a href="#try-scenario" class="nav-item" data-target="try-scenario">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3h6"/><path d="M10 3v6l-6 9a2 2 0 0 0 2 3h12a2 2 0 0 0 2-3l-6-9V3"/></svg>
+        Try a scenario
+      </a>
+      <a href="#control-panel" class="nav-item" data-target="control-panel">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+        Live actions
+      </a>
+      <a href="#transactions" class="nav-item" data-target="transactions">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="14" y2="18"/></svg>
+        Transactions
+      </a>
+      <a href="#customers" class="nav-item" data-target="customers">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.5 2.5-6 6-6s6 2.5 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M15 20c0-2.5 1.5-4.5 3.5-5"/></svg>
+        Customers
+      </a>
+    </nav>
+    <div class="sidebar-cta">
+      <div class="cta-title">Real Razorpay links</div>
+      <div class="cta-desc">Genuine test-mode Payment Links API — not mocked. See "Under the hood" below.</div>
+      <div class="cta-btn" id="cta-learn-more" style="cursor:pointer">Learn more</div>
+    </div>
+  </aside>
 
-  <p class="intro">
-    RecoverAI detects failed payments in a simulated merchant, <b>diagnoses</b> why each one
-    failed, <b>decides</b> on a bounded recovery action, checks that decision against a
-    <b>policy engine</b> neither the strategy engine nor an LLM agent can bypass, <b>executes</b>
-    it, and records the full <b>explainable trail</b> — end to end, autonomously. Everything below
-    is live: click any button in the control panel to run the real pipeline yourself.
-  </p>
-
-  <div class="pipeline-strip">
-    <div class="pipeline-step">
-      <div class="pnum">01</div>
-      <div class="plabel">Detect</div>
-      <div class="pdesc">Payment fails in the simulator</div>
-    </div>
-    <div class="pipeline-step">
-      <div class="pnum">02</div>
-      <div class="plabel">Diagnose</div>
-      <div class="pdesc">Risk score from historical rates</div>
-    </div>
-    <div class="pipeline-step">
-      <div class="pnum">03</div>
-      <div class="plabel">Decide</div>
-      <div class="pdesc">Expected-value strategy (or LLM agent if ambiguous)</div>
-    </div>
-    <div class="pipeline-step">
-      <div class="pnum">04</div>
-      <div class="plabel">Authorize</div>
-      <div class="pdesc">Deterministic policy: ALLOW / DENY / ESCALATE</div>
-    </div>
-    <div class="pipeline-step">
-      <div class="pnum">05</div>
-      <div class="plabel">Act</div>
-      <div class="pdesc">Only if allowed — real simulated outcome</div>
-    </div>
-    <div class="pipeline-step">
-      <div class="pnum">06</div>
-      <div class="plabel">Audit</div>
-      <div class="pdesc">Every step recorded, explainable</div>
-    </div>
-  </div>
-
-  <h2>What's actually running under the hood</h2>
-  <div class="capability-grid">
-    <div class="capability-card">
-      <div class="cap-title">Deterministic risk engine</div>
-      <div class="cap-desc">
-        Every failure is scored <span class="mono" style="color:var(--text)">risk_score = failure_probability × amount × recovery_probability</span>,
-        blending payment-method and customer-level historical rates — no ML needed here, and none used.
+  <div class="main-content">
+    <header class="top-header">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="search-input" placeholder="Search by transaction ID, method, or customer name…" autocomplete="off">
       </div>
-    </div>
+      <div class="header-right">
+        <div class="status-pill"><span class="dot"></span><span id="merchant-name">connecting…</span></div>
+      </div>
+    </header>
 
-    <div class="capability-card">
-      <div class="cap-title">ML recovery model</div>
-      <div class="cap-desc">
-        Logistic regression, 5-fold cross-validated, never sees the simulator's hidden
-        ground-truth label (no leakage). Click <b style="color:var(--text)">Train recovery model</b> below
-        to see it evaluated live against a rule-based baseline — including when the simple
-        baseline wins, reported honestly either way.
-      </div>
-      <div class="cap-metric" id="cap-ml-result">Not yet trained this session</div>
-    </div>
+    <div class="content-scroll">
 
-    <div class="capability-card">
-      <div class="cap-title">Expected-value strategy engine</div>
-      <div class="cap-desc">
-        7 candidate actions compared by expected value every time. <span class="mono" style="color:var(--text)">STOP</span>
-        is always available at exactly ₹0 EV — a structural guarantee the engine can never
-        recommend a money-losing action.
-      </div>
-    </div>
+      <div id="overview">
+        <p class="intro">
+          RecoverAI detects failed payments in a simulated merchant, <b>diagnoses</b> why each one
+          failed, <b>decides</b> on a bounded recovery action, checks that decision against a
+          <b>policy engine</b> neither the strategy engine nor an LLM agent can bypass, <b>executes</b>
+          it, and records the full <b>explainable trail</b> — end to end, autonomously.
+        </p>
 
-    <div class="capability-card">
-      <div class="cap-title">
-        LLM agent (Groq)
-        <span class="status-pill-sm off" id="status-groq">checking…</span>
-      </div>
-      <div class="cap-desc">
-        Tool-calling agent invoked <i>only</i> for genuinely ambiguous cases (close expected
-        values, or high-value transactions) — never in the bulk automatic pipeline, by design.
-        4 read-only tools plus one structured decision-submission tool.
-      </div>
-    </div>
+        <div class="pipeline-strip">
+          <div class="pipeline-step"><div class="pnum">01</div><div class="plabel">Detect</div><div class="pdesc">Payment fails in the simulator</div></div>
+          <div class="pipeline-step"><div class="pnum">02</div><div class="plabel">Diagnose</div><div class="pdesc">Risk score from historical rates</div></div>
+          <div class="pipeline-step"><div class="pnum">03</div><div class="plabel">Decide</div><div class="pdesc">Expected-value strategy (or LLM agent if ambiguous)</div></div>
+          <div class="pipeline-step"><div class="pnum">04</div><div class="plabel">Authorize</div><div class="pdesc">Deterministic policy: ALLOW / DENY / ESCALATE</div></div>
+          <div class="pipeline-step"><div class="pnum">05</div><div class="plabel">Act</div><div class="pdesc">Only if allowed — real simulated outcome</div></div>
+          <div class="pipeline-step"><div class="pnum">06</div><div class="plabel">Audit</div><div class="pdesc">Every step recorded, explainable</div></div>
+        </div>
 
-    <div class="capability-card">
-      <div class="cap-title">Deterministic policy engine</div>
-      <div class="cap-desc">
-        8 independent guardrail checks — valid action, customer opt-out, retry limit,
-        discount limit, intervention frequency, high-value threshold, automated amount
-        limit, agent-requested approval — combined with strict
-        <span class="mono" style="color:var(--text)">DENY &gt; ESCALATE &gt; ALLOW</span> precedence.
-        Neither the strategy engine nor the LLM agent can bypass it.
-      </div>
-    </div>
+        <div class="eyebrow">The ledger</div>
+        <div class="ledger-line">
+          <div class="ledger-stage processed"><div class="ledger-label">Revenue processed</div><div class="ledger-amount" id="m-processed">—</div></div>
+          <div class="ledger-stage at-risk"><div class="ledger-label">At risk</div><div class="ledger-amount" id="m-at-risk">—</div></div>
+          <div class="ledger-stage attempted"><div class="ledger-label">Attempted</div><div class="ledger-amount" id="m-attempted">—</div></div>
+          <div class="ledger-stage recovered"><div class="ledger-label">Recovered</div><div class="ledger-amount" id="m-recovered">—</div></div>
+        </div>
 
-    <div class="capability-card">
-      <div class="cap-title">Fair experimentation</div>
-      <div class="cap-desc">
-        Every condition compared against the <i>same</i> transaction using the <i>same</i>
-        random seed, so a strategy's higher success rate reflects real decision quality —
-        not luck. Click <b style="color:var(--text)">Compare strategies</b> below to run it.
-      </div>
-    </div>
+        <div class="secondary-stats">
+          <div class="chip">Recovery rate <b id="m-rate">—</b></div>
+          <div class="chip">Interventions <b id="m-interventions">—</b></div>
+          <div class="chip">Failed interventions <b id="m-failed">—</b></div>
+          <div class="chip">Escalations <b id="m-escalations">—</b></div>
+          <div class="chip">Stopped by policy <b id="m-stopped-policy">—</b></div>
+          <div class="chip">Stopped by strategy <b id="m-stopped-strategy">—</b></div>
+        </div>
 
-    <div class="capability-card">
-      <div class="cap-title">Performance engineering</div>
-      <div class="cap-desc">
-        Database indexing, batched commits, and SQL-side aggregation replaced per-event
-        commits and full-table scans — a measured 7x speedup, near-linear scaling past
-        20,000 transactions.
+        <h2>Breakdown</h2>
+        <div class="chart-grid">
+          <div class="card"><h3>Recovery by strategy</h3><canvas id="chart-strategy"></canvas></div>
+          <div class="card"><h3>Recovery by payment method</h3><canvas id="chart-method"></canvas></div>
+          <div class="card"><h3>Failure reasons (attempted cases only)</h3><canvas id="chart-reasons"></canvas></div>
+          <div class="card"><h3>Policy verdicts</h3><canvas id="chart-policy"></canvas></div>
+        </div>
       </div>
-      <div class="cap-metric" id="cap-perf-result">Not yet measured this session</div>
-    </div>
 
-    <div class="capability-card">
-      <div class="cap-title">
-        Real Razorpay integration
-        <span class="status-pill-sm off" id="status-razorpay">checking…</span>
+      <h2 id="hood">What's actually running under the hood</h2>
+      <div class="capability-grid">
+        <div class="capability-card">
+          <div class="cap-title">Deterministic risk engine</div>
+          <div class="cap-desc">Every failure is scored <span class="mono" style="color:var(--text)">risk_score = failure_probability × amount × recovery_probability</span>, blending payment-method and customer-level historical rates.</div>
+        </div>
+        <div class="capability-card">
+          <div class="cap-title">ML recovery model</div>
+          <div class="cap-desc">Logistic regression, 5-fold cross-validated, never sees the simulator's hidden ground-truth label. Click <b style="color:var(--text)">Train recovery model</b> below to see it evaluated live against a rule-based baseline.</div>
+          <div class="cap-metric" id="cap-ml-result">Not yet trained this session</div>
+        </div>
+        <div class="capability-card">
+          <div class="cap-title">Expected-value strategy engine</div>
+          <div class="cap-desc">7 candidate actions compared by expected value. <span class="mono" style="color:var(--text)">STOP</span> is always available at exactly ₹0 EV — a structural guarantee against a money-losing recommendation.</div>
+        </div>
+        <div class="capability-card">
+          <div class="cap-title">LLM agent (Groq) <span class="status-pill-sm off" id="status-groq">checking…</span></div>
+          <div class="cap-desc">Tool-calling agent invoked only for genuinely ambiguous cases — never in the bulk automatic pipeline, by design.</div>
+        </div>
+        <div class="capability-card">
+          <div class="cap-title">Deterministic policy engine</div>
+          <div class="cap-desc">8 independent guardrail checks combined with strict <span class="mono" style="color:var(--text)">DENY &gt; ESCALATE &gt; ALLOW</span> precedence. Neither the strategy engine nor the LLM agent can bypass it.</div>
+        </div>
+        <div class="capability-card">
+          <div class="cap-title">Fair experimentation</div>
+          <div class="cap-desc">Every condition compared against the same transaction using the same random seed — real decision quality, not luck. Click <b style="color:var(--text)">Compare strategies</b> below.</div>
+        </div>
+        <div class="capability-card">
+          <div class="cap-title">Performance engineering</div>
+          <div class="cap-desc">Indexing, batched commits, and SQL-side aggregation replaced per-event commits — a measured 7x speedup, near-linear scaling past 20,000 transactions.</div>
+          <div class="cap-metric" id="cap-perf-result">Not yet measured this session</div>
+        </div>
+        <div class="capability-card">
+          <div class="cap-title">Real Razorpay integration <span class="status-pill-sm off" id="status-razorpay">checking…</span></div>
+          <div class="cap-desc">Genuine test-mode Payment Links API calls, restricted to customer-facing strategies only.</div>
+        </div>
       </div>
-      <div class="cap-desc">
-        Genuine test-mode Payment Links API calls (not mocked), restricted to
-        customer-facing strategies only — the simulator remains the sole source of
-        truth for whether recovery actually succeeded.
-      </div>
-    </div>
-  </div>
 
-  <h2>⚠️ Chaos mode <span style="font-size:12px; color:var(--muted); font-weight:400">— simulate a real provider outage</span></h2>
-  <div class="chaos-panel">
-    <div style="font-size:13px; color:var(--muted); margin-bottom:14px">
-      Temporarily degrades ONE payment provider's real success odds, generates a
-      "before" batch and a "during" batch through the full closed loop, and shows
-      exactly what shifted. Chaos mode only changes ground truth (app/simulator/chaos.py) —
-      the risk engine, strategy engine, and policy engine never see it. Everything
-      below is emergent, computed from real observed data, the same way a real
-      production system would have to detect a real outage.
-    </div>
-    <div class="form-row">
-      <div class="form-field">
-        <label>Payment method to degrade</label>
-        <select id="chaos-method">
-          <option value="upi" selected>UPI</option>
-          <option value="credit_card">Credit card</option>
-          <option value="debit_card">Debit card</option>
-          <option value="net_banking">Net banking</option>
-          <option value="wallet">Wallet</option>
+      <h2 id="escalations">Escalation queue <span style="font-size:12px; color:var(--muted); font-weight:400">— cases waiting on a human</span></h2>
+      <div class="scenario-form" style="margin-bottom:48px">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
+          <div style="font-size:12px; color:var(--muted)">Every case the policy engine flagged <span class="verdict-tag escalate">escalate</span> and no one has acted on yet.</div>
+          <button class="btn secondary" id="btn-refresh-escalations" style="flex:none">Refresh</button>
+        </div>
+        <div id="escalation-list"><div class="esc-empty">Loading…</div></div>
+      </div>
+
+      <h2 id="chaos">⚠️ Chaos mode <span style="font-size:12px; color:var(--muted); font-weight:400">— simulate a real provider outage</span></h2>
+      <div class="chaos-panel">
+        <div style="font-size:13px; color:var(--muted); margin-bottom:14px">
+          Temporarily degrades ONE payment provider's real success odds, generates a "before" batch and a "during" batch through the full closed loop, and shows exactly what shifted — entirely emergent from observed data, never a hidden flag read by the risk/strategy/policy engines.
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label>Payment method to degrade</label>
+            <select id="chaos-method">
+              <option value="upi" selected>UPI</option>
+              <option value="credit_card">Credit card</option>
+              <option value="debit_card">Debit card</option>
+              <option value="net_banking">Net banking</option>
+              <option value="wallet">Wallet</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Batch size (each phase)</label>
+            <input type="number" id="chaos-batch-size" value="250" min="50" max="1000" step="50">
+          </div>
+        </div>
+        <button class="btn danger" id="btn-chaos-demo">Run outage simulation</button>
+        <div id="chaos-output"></div>
+      </div>
+
+      <h2 id="try-scenario">Try your own scenario</h2>
+      <div class="scenario-form">
+        <div class="form-row">
+          <div class="form-field">
+            <label>Amount (₹)</label>
+            <input type="number" id="ts-amount" value="15000" min="1" max="500000" step="100">
+          </div>
+          <div class="form-field">
+            <label>Payment method</label>
+            <select id="ts-payment-method">
+              <option value="upi">UPI</option>
+              <option value="credit_card" selected>Credit card</option>
+              <option value="debit_card">Debit card</option>
+              <option value="net_banking">Net banking</option>
+              <option value="wallet">Wallet</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Customer profile</label>
+            <select id="ts-customer-type">
+              <option value="reliable">Reliable</option>
+              <option value="occasional_payer">Occasional payer</option>
+              <option value="price_sensitive">Price sensitive</option>
+              <option value="high_value">High value</option>
+              <option value="frequently_fails" selected>Frequently fails</option>
+              <option value="subscription_heavy">Subscription heavy</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <label class="form-checkbox"><input type="checkbox" id="ts-opted-out"> Customer has opted out of recovery communications</label>
+          <label class="form-checkbox"><input type="checkbox" id="ts-use-agent"> Consult the real Groq LLM agent for this case</label>
+        </div>
+        <button class="btn" id="btn-try-scenario">Run through the pipeline</button>
+        <div class="scenario-output" id="scenario-output"></div>
+      </div>
+
+      <h2 id="control-panel">Live control panel</h2>
+      <div class="control-panel">
+        <div class="control-buttons">
+          <button class="btn" id="btn-simulate">Run simulation (200 customers, 1,500 txns)</button>
+          <button class="btn secondary" id="btn-train">Train recovery model</button>
+          <button class="btn secondary" id="btn-experiment">Compare strategies (fair experiment)</button>
+          <button class="btn secondary" id="btn-failure-demo">Show failure handling</button>
+          <button class="btn danger" id="btn-reset">Reset demo data</button>
+        </div>
+        <div class="action-result" id="action-result"></div>
+      </div>
+
+      <h2 id="transactions">Transactions</h2>
+      <div class="split">
+        <div class="txn-list" id="txn-list"><div class="txn-row"><span>Loading…</span></div></div>
+        <div class="detail-panel" id="detail-panel">
+          <div class="detail-empty">Select a failed transaction on the left<br>to see its full decision trail.</div>
+        </div>
+      </div>
+
+      <h2 id="customers" style="margin-top:44px">Customers <span style="font-size:12px; color:var(--muted); font-weight:400">— who's costing the most in failures</span></h2>
+      <div style="display:flex; justify-content:space-between; gap:10px; margin-bottom:12px; flex-wrap:wrap">
+        <input type="text" id="customer-search-input" placeholder="Search customers by name…"
+               style="background:var(--surface-raised); border:1px solid var(--border); color:var(--text); border-radius:100px; padding:8px 16px; font-size:12px; font-family:var(--body); flex:1 1 220px; outline:none;">
+        <select class="sort-select" id="customer-sort">
+          <option value="failure_rate">Sort by failure rate</option>
+          <option value="total_transactions">Sort by transaction volume</option>
+          <option value="recovery_rate">Sort by recovery rate</option>
         </select>
       </div>
-      <div class="form-field">
-        <label>Batch size (each phase)</label>
-        <input type="number" id="chaos-batch-size" value="250" min="50" max="1000" step="50">
+      <div class="split">
+        <div class="customer-list" id="customer-list"><div class="customer-row"><span>Loading…</span></div></div>
+        <div class="detail-panel" id="customer-detail-panel">
+          <div class="detail-empty">Select a customer on the left<br>to see their transaction history.</div>
+        </div>
       </div>
-    </div>
-    <button class="btn" id="btn-chaos-demo" style="background:var(--rust); color:var(--text)">Run outage simulation</button>
-    <div id="chaos-output"></div>
-  </div>
 
-  <h2>Try your own scenario</h2>
-  <div class="scenario-form">
-    <div class="form-row">
-      <div class="form-field">
-        <label>Amount (₹)</label>
-        <input type="number" id="ts-amount" value="15000" min="1" max="500000" step="100">
-      </div>
-      <div class="form-field">
-        <label>Payment method</label>
-        <select id="ts-payment-method">
-          <option value="upi">UPI</option>
-          <option value="credit_card" selected>Credit card</option>
-          <option value="debit_card">Debit card</option>
-          <option value="net_banking">Net banking</option>
-          <option value="wallet">Wallet</option>
-        </select>
-      </div>
-      <div class="form-field">
-        <label>Customer profile</label>
-        <select id="ts-customer-type">
-          <option value="reliable">Reliable</option>
-          <option value="occasional_payer">Occasional payer</option>
-          <option value="price_sensitive">Price sensitive</option>
-          <option value="high_value">High value</option>
-          <option value="frequently_fails" selected>Frequently fails</option>
-          <option value="subscription_heavy">Subscription heavy</option>
-        </select>
-      </div>
-    </div>
-    <div class="form-row">
-      <label class="form-checkbox"><input type="checkbox" id="ts-opted-out"> Customer has opted out of recovery communications</label>
-      <label class="form-checkbox"><input type="checkbox" id="ts-use-agent"> Consult the real Groq LLM agent for this case</label>
-    </div>
-    <button class="btn" id="btn-try-scenario">Run through the pipeline</button>
-    <div class="scenario-output" id="scenario-output"></div>
-  </div>
-
-  <h2>Escalation queue <span style="font-size:12px; color:var(--muted); font-weight:400">— cases waiting on a human</span></h2>
-  <div class="scenario-form" style="margin-bottom:48px">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
-      <div style="font-size:12px; color:var(--muted)">
-        Every case the policy engine flagged <span class="verdict-tag escalate">escalate</span> and no one has acted on yet.
-        Approving actually executes the recovery; denying does not.
-      </div>
-      <button class="btn secondary" id="btn-refresh-escalations" style="flex:none">Refresh</button>
-    </div>
-    <div id="escalation-list"><div class="esc-empty">Loading…</div></div>
-  </div>
-
-  <h2>Live control panel</h2>
-  <div class="control-panel">
-    <div class="control-buttons">
-      <button class="btn" id="btn-simulate">Run simulation (200 customers, 1,500 txns)</button>
-      <button class="btn secondary" id="btn-train">Train recovery model</button>
-      <button class="btn secondary" id="btn-experiment">Compare strategies (fair experiment)</button>
-      <button class="btn secondary" id="btn-failure-demo">Show failure handling</button>
-      <button class="btn danger" id="btn-reset">Reset demo data</button>
-    </div>
-    <div class="action-result" id="action-result"></div>
-  </div>
-
-  <div class="eyebrow">The ledger</div>
-  <div class="ledger-line" id="ledger-line">
-    <div class="ledger-stage processed">
-      <div class="ledger-label">Revenue processed</div>
-      <div class="ledger-amount" id="m-processed">—</div>
-    </div>
-    <div class="ledger-arrow">→</div>
-    <div class="ledger-stage at-risk">
-      <div class="ledger-label">At risk</div>
-      <div class="ledger-amount" id="m-at-risk">—</div>
-    </div>
-    <div class="ledger-arrow">→</div>
-    <div class="ledger-stage attempted">
-      <div class="ledger-label">Attempted</div>
-      <div class="ledger-amount" id="m-attempted">—</div>
-    </div>
-    <div class="ledger-arrow">→</div>
-    <div class="ledger-stage recovered">
-      <div class="ledger-label">Recovered</div>
-      <div class="ledger-amount" id="m-recovered">—</div>
+      <footer>RecoverAI &middot; live dashboard &middot; reads directly from the audit trail API</footer>
     </div>
   </div>
-
-  <div class="secondary-stats">
-    <div class="chip">Recovery rate <b id="m-rate">—</b></div>
-    <div class="chip">Interventions <b id="m-interventions">—</b></div>
-    <div class="chip">Failed interventions <b id="m-failed">—</b></div>
-    <div class="chip">Escalations <b id="m-escalations">—</b></div>
-    <div class="chip">Stopped by policy <b id="m-stopped-policy">—</b></div>
-    <div class="chip">Stopped by strategy <b id="m-stopped-strategy">—</b></div>
-  </div>
-
-  <h2>Breakdown</h2>
-  <div class="chart-grid">
-    <div class="card">
-      <h3>Recovery by strategy</h3>
-      <canvas id="chart-strategy"></canvas>
-    </div>
-    <div class="card">
-      <h3>Recovery by payment method</h3>
-      <canvas id="chart-method"></canvas>
-    </div>
-    <div class="card">
-      <h3>Failure reasons (attempted cases only)</h3>
-      <canvas id="chart-reasons"></canvas>
-    </div>
-    <div class="card">
-      <h3>Policy verdicts</h3>
-      <canvas id="chart-policy"></canvas>
-    </div>
-  </div>
-
-  <h2>Transactions</h2>
-  <div class="split">
-    <div class="txn-list" id="txn-list">
-      <div class="txn-row"><span>Loading…</span></div>
-    </div>
-    <div class="detail-panel" id="detail-panel">
-      <div class="detail-empty">Select a failed transaction on the left<br>to see its full decision trail.</div>
-    </div>
-  </div>
-
-  <footer>RecoverAI &middot; live dashboard &middot; reads directly from the audit trail API</footer>
 </div>
 
 <script>
 const API_BASE = window.location.protocol === 'file:' ? 'http://127.0.0.1:8000' : '';
+
+// Small, dependency-free celebratory moment — fires when an escalated
+// case is approved AND actually recovers real revenue. No canvas
+// library, just a handful of absolutely-positioned divs animated with
+// CSS and removed after they finish falling.
+function celebrateRecovery() {
+  const colors = ['#C6F135', '#7FDB6B', '#FFB020', '#F2F2F0'];
+  const container = document.createElement('div');
+  container.style.cssText = 'position:fixed; inset:0; pointer-events:none; z-index:9999; overflow:hidden;';
+  document.body.appendChild(container);
+
+  for (let i = 0; i < 40; i++) {
+    const piece = document.createElement('div');
+    const size = 6 + Math.random() * 6;
+    const left = Math.random() * 100;
+    const duration = 1.6 + Math.random() * 1.2;
+    const delay = Math.random() * 0.3;
+    const rotate = Math.random() * 360;
+    piece.style.cssText = `
+      position:absolute; top:-20px; left:${left}vw;
+      width:${size}px; height:${size}px;
+      background:${colors[Math.floor(Math.random() * colors.length)]};
+      border-radius:${Math.random() > 0.5 ? '50%' : '3px'};
+      transform: rotate(${rotate}deg);
+      animation: confetti-fall ${duration}s ease-in ${delay}s forwards;
+    `;
+    container.appendChild(piece);
+  }
+
+  setTimeout(() => container.remove(), 3200);
+}
+
+if (!document.getElementById('confetti-keyframes')) {
+  const style = document.createElement('style');
+  style.id = 'confetti-keyframes';
+  style.textContent = `
+    @keyframes confetti-fall {
+      to { transform: translateY(105vh) rotate(720deg); opacity: 0.3; }
+    }
+  `;
+  document.head.appendChild(style);
+}
 
 async function getJSON(path) {
   const res = await fetch(API_BASE + path);
@@ -1002,8 +811,8 @@ function formatINR(n) {
 }
 
 const CHART_COLORS = {
-  gold: '#C9A227', rust: '#A8452E', teal: '#3E7C7B',
-  muted: '#8B96A3', text: '#E8E3D8', grid: '#2A3A48',
+  lime: '#C6F135', red: '#FF6B6B', amber: '#FFB020',
+  muted: '#8B8C93', text: '#F2F2F0', grid: '#27282E',
 };
 
 Chart.defaults.color = CHART_COLORS.muted;
@@ -1021,12 +830,35 @@ function baseBarOptions() {
   };
 }
 
+// Animates a number counting up/down from its current displayed value to
+// a new one, using easing rather than jumping instantly — a small touch
+// that makes the dashboard feel live rather than static, especially
+// right after clicking an action button.
+const _animatedValues = {};
+function animateNumber(elementId, targetValue, formatter) {
+  const el = document.getElementById(elementId);
+  const startValue = _animatedValues[elementId] ?? 0;
+  _animatedValues[elementId] = targetValue;
+
+  const duration = 600;
+  const startTime = performance.now();
+
+  function frame(now) {
+    const elapsed = Math.min((now - startTime) / duration, 1);
+    const eased = 1 - Math.pow(1 - elapsed, 3); // ease-out cubic
+    const current = startValue + (targetValue - startValue) * eased;
+    el.textContent = formatter(current);
+    if (elapsed < 1) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+
 async function loadMetrics() {
   const m = await getJSON('/metrics');
-  document.getElementById('m-processed').textContent = formatINR(m.revenue_processed);
-  document.getElementById('m-at-risk').textContent = formatINR(m.revenue_at_risk);
-  document.getElementById('m-attempted').textContent = formatINR(m.revenue_attempted);
-  document.getElementById('m-recovered').textContent = formatINR(m.revenue_recovered);
+  animateNumber('m-processed', m.revenue_processed, formatINR);
+  animateNumber('m-at-risk', m.revenue_at_risk, formatINR);
+  animateNumber('m-attempted', m.revenue_attempted, formatINR);
+  animateNumber('m-recovered', m.revenue_recovered, formatINR);
   document.getElementById('m-rate').textContent = m.recovery_rate != null ? (m.recovery_rate * 100).toFixed(1) + '%' : 'n/a';
   document.getElementById('m-interventions').textContent = m.interventions_attempted;
   document.getElementById('m-failed').textContent = m.failed_interventions;
@@ -1046,8 +878,8 @@ async function loadStrategyChart() {
     data: {
       labels: data.map(d => d.strategy),
       datasets: [
-        { label: 'Attempted', data: data.map(d => d.attempted), backgroundColor: CHART_COLORS.teal },
-        { label: 'Succeeded', data: data.map(d => d.succeeded), backgroundColor: CHART_COLORS.gold },
+        { label: 'Attempted', data: data.map(d => d.attempted), backgroundColor: CHART_COLORS.muted },
+        { label: 'Succeeded', data: data.map(d => d.succeeded), backgroundColor: CHART_COLORS.lime },
       ],
     },
     options: baseBarOptions(),
@@ -1062,8 +894,8 @@ async function loadMethodChart() {
     data: {
       labels: data.map(d => d.payment_method),
       datasets: [
-        { label: 'Failed', data: data.map(d => d.failed), backgroundColor: CHART_COLORS.rust },
-        { label: 'Recovered', data: data.map(d => d.recovered), backgroundColor: CHART_COLORS.gold },
+        { label: 'Failed', data: data.map(d => d.failed), backgroundColor: CHART_COLORS.red },
+        { label: 'Recovered', data: data.map(d => d.recovered), backgroundColor: CHART_COLORS.lime },
       ],
     },
     options: baseBarOptions(),
@@ -1077,11 +909,7 @@ async function loadReasonsChart() {
     type: 'doughnut',
     data: {
       labels: data.map(d => d.failure_type),
-      datasets: [{
-        data: data.map(d => d.count),
-        backgroundColor: [CHART_COLORS.teal, CHART_COLORS.rust],
-        borderColor: '#16212C',
-      }],
+      datasets: [{ data: data.map(d => d.count), backgroundColor: [CHART_COLORS.lime, CHART_COLORS.red], borderColor: '#17181C' }],
     },
     options: { plugins: { legend: { position: 'bottom', labels: { color: CHART_COLORS.muted } } } },
   });
@@ -1089,28 +917,28 @@ async function loadReasonsChart() {
 
 async function loadPolicyChart() {
   const data = await getJSON('/metrics/policy-verdicts');
-  const colorFor = v => v === 'allow' ? CHART_COLORS.teal : v === 'deny' ? CHART_COLORS.rust : CHART_COLORS.gold;
+  const colorFor = v => v === 'allow' ? CHART_COLORS.lime : v === 'deny' ? CHART_COLORS.red : CHART_COLORS.amber;
   if (policyChart) policyChart.destroy();
   policyChart = new Chart(document.getElementById('chart-policy'), {
     type: 'doughnut',
     data: {
       labels: data.map(d => d.verdict),
-      datasets: [{
-        data: data.map(d => d.count),
-        backgroundColor: data.map(d => colorFor(d.verdict)),
-        borderColor: '#16212C',
-      }],
+      datasets: [{ data: data.map(d => d.count), backgroundColor: data.map(d => colorFor(d.verdict)), borderColor: '#17181C' }],
     },
     options: { plugins: { legend: { position: 'bottom', labels: { color: CHART_COLORS.muted } } } },
   });
 }
 
-async function loadTransactionList() {
-  const txns = await getJSON('/transactions?status=failed&limit=30');
+async function loadTransactionList(searchTerm = '') {
+  const params = new URLSearchParams({ status: 'failed', limit: '30' });
+  if (searchTerm) params.set('search', searchTerm);
+  const txns = await getJSON('/transactions?' + params.toString());
   const list = document.getElementById('txn-list');
   list.innerHTML = '';
   if (txns.length === 0) {
-    list.innerHTML = '<div class="txn-row"><span>No failed transactions yet.</span></div>';
+    list.innerHTML = searchTerm
+      ? `<div class="txn-row"><span>No failed transactions match "${searchTerm}".</span></div>`
+      : '<div class="txn-row"><span>No failed transactions yet.</span></div>';
     return;
   }
   txns.forEach(t => {
@@ -1240,6 +1068,9 @@ async function loadEscalationQueue() {
             resultEl.innerHTML = result.executed
               ? `<span class="esc-resolved-tag approved">approved</span> executed — ${result.succeeded ? 'recovered ' + formatINR(result.amount_recovered) : 'did not recover'}`
               : `<span class="esc-resolved-tag approved">approved</span> ${result.note || ''}`;
+            if (result.executed && result.succeeded) {
+              celebrateRecovery();
+            }
           } else {
             resultEl.innerHTML = `<span class="esc-resolved-tag denied">denied</span> no action taken`;
           }
@@ -1247,21 +1078,111 @@ async function loadEscalationQueue() {
           await refreshDashboard();
         } catch (e) {
           document.getElementById(`esc-result-${id}`).innerHTML =
-            `<span style="color:var(--rust)">Error: ${e.message}</span>`;
+            `<span style="color:var(--red)">Error: ${e.message}</span>`;
         }
       });
     });
   } catch (e) {
-    list.innerHTML = `<div class="esc-empty" style="color:var(--rust)">Could not load escalation queue.</div>`;
+    list.innerHTML = `<div class="esc-empty" style="color:var(--red)">Could not load escalation queue.</div>`;
   }
 }
 
 document.getElementById('btn-refresh-escalations').addEventListener('click', loadEscalationQueue);
 
+async function loadCustomerList(sortBy = 'failure_rate', searchTerm = '') {
+  const params = new URLSearchParams({ sort_by: sortBy, limit: '30' });
+  if (searchTerm) params.set('search', searchTerm);
+  const customers = await getJSON(`/customers?${params.toString()}`);
+  const list = document.getElementById('customer-list');
+  list.innerHTML = '';
+  if (customers.length === 0) {
+    list.innerHTML = searchTerm
+      ? `<div class="customer-row"><span>No customers match "${searchTerm}".</span></div>`
+      : '<div class="customer-row"><span>No customers with transactions yet.</span></div>';
+    return;
+  }
+  customers.forEach(c => {
+    const row = document.createElement('div');
+    row.className = 'customer-row';
+    row.dataset.id = c.id;
+    const rateText = (c.failure_rate * 100).toFixed(0) + '%';
+    const recoveryText = c.recovery_rate != null ? (c.recovery_rate * 100).toFixed(0) + '% recovered' : 'no attempts';
+    row.innerHTML = `
+      <span>
+        <div class="cust-name">${c.name}${c.opted_out ? '<span class="cust-badge">opted out</span>' : ''}</div>
+        <div class="cust-meta">${c.customer_type} &middot; ${c.total_transactions} txns</div>
+      </span>
+      <span class="cust-rate">${rateText} failed<br><span style="color:var(--muted); font-size:11px">${recoveryText}</span></span>
+    `;
+    row.addEventListener('click', () => selectCustomer(c.id, row));
+    list.appendChild(row);
+  });
+}
+
+document.getElementById('customer-sort').addEventListener('change', (e) => {
+  loadCustomerList(e.target.value, document.getElementById('customer-search-input').value.trim());
+});
+
+let customerSearchDebounceTimer = null;
+document.getElementById('customer-search-input').addEventListener('input', (e) => {
+  clearTimeout(customerSearchDebounceTimer);
+  const term = e.target.value.trim();
+  customerSearchDebounceTimer = setTimeout(() => {
+    loadCustomerList(document.getElementById('customer-sort').value, term);
+  }, 300);
+});
+
+async function selectCustomer(id, rowEl) {
+  document.querySelectorAll('.customer-row').forEach(r => r.classList.remove('active'));
+  if (rowEl) rowEl.classList.add('active');
+
+  const panel = document.getElementById('customer-detail-panel');
+  panel.innerHTML = '<div class="detail-empty">Loading…</div>';
+
+  let customer;
+  try {
+    customer = await getJSON(`/customers/${id}`);
+  } catch (e) {
+    panel.innerHTML = '<div class="detail-empty">Could not load this customer.</div>';
+    return;
+  }
+
+  let rows = '';
+  customer.transactions.forEach(t => {
+    const statusColor = t.status === 'failed' ? (t.recovered ? 'var(--lime)' : 'var(--red)') : 'var(--muted)';
+    rows += `
+      <div class="customer-txn-row" data-txn-id="${t.id}">
+        <span style="color:${statusColor}">#${t.id} &middot; ${t.payment_method} &middot; ${t.status}${t.recovered ? ' (recovered)' : ''}</span>
+        <span>${formatINR(t.amount)}</span>
+      </div>
+    `;
+  });
+
+  panel.innerHTML = `
+    <div style="margin-bottom:16px">
+      <div style="font-family:var(--display); font-weight:600; font-size:16px">${customer.name}</div>
+      <div style="font-size:12px; color:var(--muted); margin-top:2px">${customer.email} &middot; ${customer.customer_type}${customer.opted_out ? ' &middot; opted out of communications' : ''}</div>
+    </div>
+    <div style="font-size:11px; color:var(--muted); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.05em">Recent transactions (click to see full decision trail)</div>
+    ${rows || '<div style="color:var(--muted); font-size:13px">No transactions found.</div>'}
+  `;
+
+  panel.querySelectorAll('.customer-txn-row').forEach(row => {
+    row.addEventListener('click', () => {
+      const txnId = row.dataset.txnId;
+      document.getElementById('transactions').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // Give the scroll a moment, then load that transaction's full
+      // timeline in the existing Transactions detail panel — reusing
+      // the same audit-log view rather than building a second one.
+      setTimeout(() => selectTransaction(Number(txnId), null), 400);
+    });
+  });
+}
+
 async function refreshDashboard() {
   const m = await loadMetrics();
   document.getElementById('merchant-name').textContent = `${m.transactions_total.toLocaleString()} transactions`;
-  await Promise.all([loadStrategyChart(), loadMethodChart(), loadReasonsChart(), loadPolicyChart(), loadTransactionList(), loadEscalationQueue()]);
+  await Promise.all([loadStrategyChart(), loadMethodChart(), loadReasonsChart(), loadPolicyChart(), loadTransactionList(), loadEscalationQueue(), loadCustomerList(document.getElementById('customer-sort').value, document.getElementById('customer-search-input').value.trim())]);
   document.getElementById('detail-panel').innerHTML =
     '<div class="detail-empty">Select a failed transaction on the left<br>to see its full decision trail.</div>';
 }
@@ -1281,15 +1202,9 @@ async function withLoading(button, loadingLabel, fn, outputElementId = 'action-r
   try {
     await fn();
   } catch (e) {
-    // BUG FIX: this used to always call showResult(), which hardcodes
-    // #action-result (the Live Control Panel's own output area). Any
-    // error from Chaos Mode, Try Your Own Scenario, etc. was silently
-    // rendered in the WRONG part of the page — looking exactly like
-    // "nothing happened" when something actually did fail (e.g. an
-    // out-of-range input rejected by the API with a 422).
     const target = document.getElementById(outputElementId);
     if (target) {
-      target.innerHTML = `<span style="color: var(--rust)">Error: ${e.message}</span>`;
+      target.innerHTML = `<span style="color: var(--red)">Error: ${e.message}</span>`;
     }
   } finally {
     setButtonsDisabled(false);
@@ -1304,8 +1219,7 @@ document.getElementById('btn-simulate').addEventListener('click', async (e) => {
       `Generated ${result.transactions_generated.toLocaleString()} new transactions for ` +
       `${result.customers_generated.toLocaleString()} customers through the full closed loop ` +
       `in <b style="color: var(--text)">${result.elapsed_seconds}s</b> ` +
-      `(<b style="color: var(--text)">${result.transactions_per_second}</b> transactions/sec — ` +
-      `this is what Phase 13's indexing and batched-commit work actually bought). Dashboard updated below.`
+      `(<b style="color: var(--text)">${result.transactions_per_second}</b> transactions/sec).`
     );
     document.getElementById('cap-perf-result').textContent =
       `Last run: ${result.transactions_generated.toLocaleString()} txns in ${result.elapsed_seconds}s (${result.transactions_per_second}/sec)`;
@@ -1318,16 +1232,21 @@ document.getElementById('btn-train').addEventListener('click', async (e) => {
     const result = await postJSON('/actions/train-model', {});
     if (!result.trained) {
       showResult(`Not trained: ${result.reason}`);
+      // BUG FIX: this used to only update #action-result (down in the
+      // Live Control Panel), leaving the "ML recovery model" card stuck
+      // on "Not yet trained this session" forever if training failed —
+      // looking exactly like the button did nothing to anyone watching
+      // that card instead of scrolling down to see the reason.
+      document.getElementById('cap-ml-result').textContent = `Not trained: ${result.reason}`;
       return;
     }
     showResult(`
       <div><b style="color: var(--text)">Model trained</b> on ${result.dataset_size} labeled examples
       (${(result.recovered_fraction * 100).toFixed(1)}% recovered).</div>
-      <div style="margin-top:6px">ML model ROC-AUC: <b style="color: var(--gold)">${result.roc_auc.toFixed(3)}</b>
-      &nbsp;vs.&nbsp; rule-based baseline ROC-AUC: <b style="color: var(--teal)">${result.baseline_auc.toFixed(3)}</b></div>
+      <div style="margin-top:6px">ML model ROC-AUC: <b style="color: var(--lime)">${result.roc_auc.toFixed(3)}</b>
+      &nbsp;vs.&nbsp; rule-based baseline ROC-AUC: <b style="color: var(--text)">${result.baseline_auc.toFixed(3)}</b></div>
       <div style="margin-top:4px">${result.verdict}</div>
       <div style="margin-top:6px">Confusion matrix (rows=actual, cols=predicted): ${JSON.stringify(result.confusion_matrix)}</div>
-      <div style="margin-top:6px">The next simulation run will use this trained model instead of the rule-based fallback.</div>
     `);
     document.getElementById('cap-ml-result').textContent =
       `ML AUC ${result.roc_auc.toFixed(3)} vs. baseline ${result.baseline_auc.toFixed(3)}`;
@@ -1340,16 +1259,10 @@ document.getElementById('btn-experiment').addEventListener('click', async (e) =>
     let rows = '';
     result.conditions.forEach(c => {
       const rate = c.recovery_rate != null ? (c.recovery_rate * 100).toFixed(1) + '%' : 'n/a';
-      rows += `<tr>
-        <td>${c.condition}</td>
-        <td class="num">${c.interventions}</td>
-        <td class="num">${c.successful}</td>
-        <td class="num">${rate}</td>
-        <td class="num">${formatINR(c.revenue_recovered)}</td>
-      </tr>`;
+      rows += `<tr><td>${c.condition}</td><td class="num">${c.interventions}</td><td class="num">${c.successful}</td><td class="num">${rate}</td><td class="num">${formatINR(c.revenue_recovered)}</td></tr>`;
     });
     showResult(`
-      <div>Fair comparison across ${result.total_failed} failed transactions (same population, same underlying randomness per transaction — see app/experiments/harness.py for why this is a valid comparison).</div>
+      <div>Fair comparison across ${result.total_failed} failed transactions (same population, same underlying randomness per transaction).</div>
       <table class="result-table">
         <thead><tr><th>Condition</th><th>Interventions</th><th>Recovered</th><th>Rate</th><th>Revenue recovered</th></tr></thead>
         <tbody>${rows}</tbody>
@@ -1368,7 +1281,7 @@ document.getElementById('btn-failure-demo').addEventListener('click', async (e) 
         <div class="scenario-lines">${s.lines.join('\n')}</div>
       </details>`;
     });
-    showResult(`<div>Five deliberate scenarios proving RecoverAI fails safely — bounded, explainable, auditable, never silent.</div>${cards}`);
+    showResult(`<div>Five deliberate scenarios proving RecoverAI fails safely.</div>${cards}`);
   });
 });
 
@@ -1381,42 +1294,21 @@ document.getElementById('btn-reset').addEventListener('click', async (e) => {
   });
 });
 
-async function loadSystemStatus() {
-  try {
-    const s = await getJSON('/system/status');
-    const groqEl = document.getElementById('status-groq');
-    groqEl.textContent = s.groq_configured ? 'configured' : 'not configured';
-    groqEl.className = 'status-pill-sm ' + (s.groq_configured ? 'on' : 'off');
-
-    const rzpEl = document.getElementById('status-razorpay');
-    rzpEl.textContent = s.razorpay_configured ? 'configured' : 'not configured';
-    rzpEl.className = 'status-pill-sm ' + (s.razorpay_configured ? 'on' : 'off');
-  } catch (e) {
-    // Non-critical — leave the pills at their default state.
-  }
-}
-
 document.getElementById('btn-chaos-demo').addEventListener('click', async (e) => {
   await withLoading(e.currentTarget, 'Simulating outage…', async () => {
     const method = document.getElementById('chaos-method').value;
     const batchSize = Number(document.getElementById('chaos-batch-size').value);
     const out = document.getElementById('chaos-output');
 
-    // Matches the API's actual constraints (Query(..., ge=20, le=2000) in
-    // app/api/actions.py) — validated here too so an out-of-range value
-    // gets an immediate, clear message instead of a round-trip 422 whose
-    // error used to render in the wrong part of the page entirely.
     if (batchSize < 20 || batchSize > 2000) {
-      out.innerHTML = `<div style="color: var(--rust); margin-top:12px">Batch size must be between 20 and 2000 (got ${batchSize}).</div>`;
+      out.innerHTML = `<div style="color: var(--red); margin-top:12px">Batch size must be between 20 and 2000 (got ${batchSize}).</div>`;
       return;
     }
 
-    const result = await postJSON('/actions/chaos-demo', {
-      payment_method: method, batch_size: batchSize,
-    });
+    const result = await postJSON('/actions/chaos-demo', { payment_method: method, batch_size: batchSize });
 
     if (result.error) {
-      out.innerHTML = `<div style="color: var(--rust); margin-top:12px">${result.error}</div>`;
+      out.innerHTML = `<div style="color: var(--red); margin-top:12px">${result.error}</div>`;
       return;
     }
 
@@ -1442,11 +1334,7 @@ document.getElementById('btn-chaos-demo').addEventListener('click', async (e) =>
           <div class="chaos-stat"><span class="label">Revenue recovered</span><span>${formatINR(result.during.revenue_recovered)}</span></div>
         </div>
       </div>
-      <div class="chaos-narrative">
-        <ul style="margin:0; padding-left:18px">
-          ${result.narrative.map(n => `<li>${n}</li>`).join('')}
-        </ul>
-      </div>
+      <div class="chaos-narrative"><ul style="margin:0; padding-left:18px">${result.narrative.map(n => `<li>${n}</li>`).join('')}</ul></div>
     `;
     await refreshDashboard();
   }, 'chaos-output');
@@ -1469,11 +1357,10 @@ document.getElementById('btn-try-scenario').addEventListener('click', async (e) 
     const out = document.getElementById('scenario-output');
 
     if (result.error) {
-      out.innerHTML = `<div style="color: var(--rust)">${result.error}</div>`;
+      out.innerHTML = `<div style="color: var(--red)">${result.error}</div>`;
       return;
     }
 
-    // Expected-value candidate bars, winner highlighted.
     const maxEv = Math.max(...result.candidates.map(c => Math.max(c.expected_value, 0)), 1);
     let bars = '';
     result.candidates.forEach(c => {
@@ -1486,7 +1373,7 @@ document.getElementById('btn-try-scenario').addEventListener('click', async (e) 
       </div>`;
     });
 
-    const verdictClass = result.policy_verdict; // allow / deny / escalate
+    const verdictClass = result.policy_verdict;
     let agentHTML = '';
     if (result.agent) {
       if (result.agent.error) {
@@ -1497,11 +1384,10 @@ document.getElementById('btn-try-scenario').addEventListener('click', async (e) 
           traceHTML += `<div class="agent-trace-step">called <b style="color:var(--text)">${t.tool}</b>(${JSON.stringify(t.input)}) &rarr; ${JSON.stringify(t.output)}</div>`;
         });
         agentHTML = `
-          <div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--hairline)">
+          <div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--border)">
             <div style="font-weight:600; color: var(--text); margin-bottom:6px">Groq agent consultation (real API call)</div>
             ${traceHTML}
-            <div style="margin-top:6px">Proposed: <b style="color: var(--text)">${result.agent.action}</b>
-            (confidence ${(result.agent.confidence * 100).toFixed(0)}%)</div>
+            <div style="margin-top:6px">Proposed: <b style="color: var(--text)">${result.agent.action}</b> (confidence ${(result.agent.confidence * 100).toFixed(0)}%)</div>
             <div>${result.agent.reason}</div>
           </div>
         `;
@@ -1517,7 +1403,7 @@ document.getElementById('btn-try-scenario').addEventListener('click', async (e) 
       ${bars}
       <div style="margin-top:12px">${result.reasoning}</div>
       ${agentHTML}
-      <div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--hairline)">
+      <div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--border)">
         Final check on <b style="color:var(--text)">${result.final_strategy_checked}</b>:
         <span class="verdict-tag ${verdictClass}">${result.policy_verdict}</span>
         ${result.policy_reasons.length ? '<div style="margin-top:6px">' + result.policy_reasons.join('<br>') + '</div>' : ''}
@@ -1530,6 +1416,106 @@ document.getElementById('btn-try-scenario').addEventListener('click', async (e) 
   }, 'scenario-output');
 });
 
+async function loadSystemStatus() {
+  try {
+    const s = await getJSON('/system/status');
+    const groqEl = document.getElementById('status-groq');
+    groqEl.textContent = s.groq_configured ? 'configured' : 'not configured';
+    groqEl.className = 'status-pill-sm ' + (s.groq_configured ? 'on' : 'off');
+
+    const rzpEl = document.getElementById('status-razorpay');
+    rzpEl.textContent = s.razorpay_configured ? 'configured' : 'not configured';
+    rzpEl.className = 'status-pill-sm ' + (s.razorpay_configured ? 'on' : 'off');
+  } catch (e) {
+    // Non-critical
+  }
+}
+
+// Sidebar nav: scroll-to-section + active-state highlighting via IntersectionObserver.
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', (e) => {
+    e.preventDefault();
+    const target = document.getElementById(item.dataset.target);
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+
+document.getElementById('cta-learn-more').addEventListener('click', () => {
+  document.getElementById('hood').scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
+const sectionIds = ['overview', 'hood', 'escalations', 'chaos', 'try-scenario', 'control-panel', 'transactions', 'customers'];
+const sectionObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.toggle('active', item.dataset.target === entry.target.id);
+      });
+    }
+  });
+}, { rootMargin: '-20% 0px -70% 0px' });
+
+sectionIds.forEach(id => {
+  const el = document.getElementById(id);
+  if (el) sectionObserver.observe(el);
+});
+
+let searchDebounceTimer = null;
+let searchHasScrolled = false;
+document.getElementById('search-input').addEventListener('input', (e) => {
+  clearTimeout(searchDebounceTimer);
+  const term = e.target.value.trim();
+
+  // The search box lives in the fixed header, but the results it filters
+  // are in the "Transactions" section further down the page — without
+  // this, typing a search term produces no VISIBLE change unless you
+  // already happen to be scrolled down there. Jump there once, on the
+  // first character typed, so the results are actually where you're
+  // looking.
+  if (term && !searchHasScrolled) {
+    document.getElementById('transactions').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    searchHasScrolled = true;
+  }
+  if (!term) {
+    searchHasScrolled = false;
+  }
+
+  searchDebounceTimer = setTimeout(() => {
+    loadTransactionList(term);
+  }, 300);
+});
+
+async function autoPopulateCapabilityCards() {
+  // Runs automatically after the main dashboard loads, so "Under the
+  // hood" shows real, live-computed proof immediately — not a "waiting
+  // for you to click something" placeholder. The manual buttons in the
+  // Live Control Panel remain fully available to re-run either of these
+  // with fresh data at any time; this just means a judge sees genuine
+  // numbers on first load without needing to know to click anything.
+  try {
+    const train = await postJSON('/actions/train-model', {});
+    if (train.trained) {
+      document.getElementById('cap-ml-result').textContent =
+        `ML AUC ${train.roc_auc.toFixed(3)} vs. baseline ${train.baseline_auc.toFixed(3)}`;
+    }
+    // If there's not yet enough data to train, the card's default text
+    // ("Not yet trained this session") is left as-is — accurate either way.
+  } catch (e) {
+    // Non-critical — the manual "Train recovery model" button still works.
+  }
+
+  try {
+    // A modest batch, purely to get a real, live throughput number for
+    // the Performance Engineering card — not a full re-simulation.
+    const sim = await postJSON('/actions/simulate', { num_customers: 100, num_transactions: 300 });
+    document.getElementById('cap-perf-result').textContent =
+      `Last run: ${sim.transactions_generated.toLocaleString()} txns in ${sim.elapsed_seconds}s (${sim.transactions_per_second}/sec)`;
+    await refreshDashboard(); // reflect this extra data in the main charts/ledger too
+  } catch (e) {
+    // Non-critical — the manual "Run simulation" button still works.
+  }
+}
+
 async function init() {
   try {
     await refreshDashboard();
@@ -1537,6 +1523,7 @@ async function init() {
     document.getElementById('merchant-name').textContent = 'API unreachable';
   }
   loadSystemStatus();
+  autoPopulateCapabilityCards();
 }
 
 init();

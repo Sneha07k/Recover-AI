@@ -31,7 +31,7 @@ def make_test_session():
     engine = create_engine(
         "sqlite:///:memory:", connect_args={"check_same_thread": False}
     )
-    from app.models import models  # noqa: F401
+    from app.models import models 
 
     Base.metadata.create_all(bind=engine)
     Session = sessionmaker(bind=engine)
@@ -95,7 +95,7 @@ def test_retry_limit_exceeded():
         customer = make_customer(db, merchant.id)
         txn = make_transaction(db, customer.id)
 
-        for _ in range(3):  # MAX_RETRIES
+        for _ in range(3):  
             db.add(
                 RecoveryAttempt(
                     transaction_id=txn.id,
@@ -138,7 +138,7 @@ def test_too_many_interventions_today():
         customer = make_customer(db, merchant.id)
         txn = make_transaction(db, customer.id)
 
-        for _ in range(2):  # MAX_INTERVENTIONS_PER_CUSTOMER_PER_DAY
+        for _ in range(2): 
             db.add(
                 StrategyDecision(
                     transaction_id=txn.id,
@@ -171,7 +171,7 @@ def test_excessive_discount_is_denied():
 
         original = STRATEGY_DEFINITIONS[RecoveryStrategy.INCENTIVE]
         STRATEGY_DEFINITIONS[RecoveryStrategy.INCENTIVE] = StrategyParams(
-            cost=10, probability_multiplier=1.20, amount_multiplier=0.80  # 20% discount
+            cost=10, probability_multiplier=1.20, amount_multiplier=0.80 
         )
         try:
             result = evaluate_policy(
@@ -204,10 +204,7 @@ def test_customer_opt_out_denies_customer_facing_strategy():
 
 
 def test_opted_out_customer_can_still_get_a_non_customer_facing_retry():
-    """
-    Opting out means "don't contact me" — it should NOT block a silent
-    payment retry, which never involves reaching out to the customer.
-    """
+    
     db = make_test_session()
     try:
         merchant = make_merchant(db)
@@ -237,20 +234,16 @@ def test_invalid_action_is_denied():
 
 
 def test_deny_takes_precedence_over_escalate():
-    """
-    A transaction that is BOTH high-value (would escalate) AND at the
-    retry limit (would deny) must come out DENY overall — a hard limit
-    always wins over a soft "needs human review".
-    """
+    
     db = make_test_session()
     try:
         merchant = make_merchant(db)
         customer = make_customer(db, merchant.id)
         txn = make_transaction(
             db, customer.id, amount=30_000.0
-        )  # high-value -> escalate
+        )  
 
-        for _ in range(3):  # also at retry limit -> deny
+        for _ in range(3):  
             db.add(
                 RecoveryAttempt(
                     transaction_id=txn.id,

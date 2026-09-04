@@ -12,9 +12,7 @@ from app.policies.engine import ALLOW, evaluate_policy
 from app.strategy.definitions import STRATEGY_DEFINITIONS
 from app.strategy.engine import recommend_strategy
 
-# "agent" deliberately excluded from the default set — it makes real LLM
-# calls with real cost and latency. Include it explicitly (and on a small
-# population) when you actually want that comparison.
+
 CONDITIONS = ["no_intervention", "immediate_retry", "rule_based", "ml_based"]
 
 
@@ -91,18 +89,6 @@ def run_experiment(
     seed: int = 42,
     agent_client=None,
 ) -> dict[str, ConditionSummary]:
-    """
-    Runs every condition against the SAME population of failed
-    transactions. Each transaction gets a fresh RNG seeded purely from
-    (seed, transaction_id) — recreated independently for every condition
-    — so every condition sees identical underlying randomness for that
-    transaction regardless of what any other condition decided.
-
-    NOTE: this harness does not persist to StrategyDecision/PolicyDecision/
-    RecoveryAttempt, so the retry-limit and per-customer intervention-
-    frequency guardrails never trigger here. This experiment measures
-    strategy quality and the amount/discount/opt-out guardrails only.
-    """
     results: dict[str, ConditionSummary] = {}
 
     for condition in conditions:

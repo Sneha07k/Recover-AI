@@ -6,11 +6,7 @@ from app.policies.constants import HIGH_VALUE_TRANSACTION_THRESHOLD, MAX_AUTOMAT
 from app.risk.scoring import historical_failure_rate_for_customer
 from app.strategy.probability import predict_recovery_probability
 
-# Tool schemas in Groq's (OpenAI-compatible) function-calling format. Every
-# tool here except submit_recovery_decision is read-only â€” it looks things
-# up, it never changes anything. submit_recovery_decision is intercepted by
-# the agent loop itself (see app/agents/client.py) rather than "executed"
-# at all.
+
 TOOLS = [
     {
         "type": "function",
@@ -112,10 +108,7 @@ TOOLS = [
 
 
 def build_tool_executor(db: Session) -> dict:
-    """
-    Returns {tool_name: callable} for every tool EXCEPT submit_recovery_decision,
-    which the agent loop handles specially rather than "executing".
-    """
+   
 
     def get_transaction(tool_input: dict) -> dict:
         txn = db.get(Transaction, tool_input["transaction_id"])

@@ -1,6 +1,3 @@
-"""
-Run with: python scripts/run_experiment.py [num_customers] [num_transactions] [seed]
-"""
 
 import sys
 

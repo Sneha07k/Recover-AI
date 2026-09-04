@@ -11,11 +11,7 @@ from app.risk.scoring import (
 
 
 def assess_risk_on_payment_failed(db: Session, event: Event) -> RiskAssessment:
-    """
-    Consumer for PAYMENT_FAILED events. Computes a deterministic risk score
-    and persists it â€” the first real "brain" in the pipeline, even though
-    no ML or LLM is involved yet.
-    """
+    
     transaction_id = event.entity_id
     customer_id = event.payload["customer_id"]
     payment_method = PaymentMethod(event.payload["payment_method"])

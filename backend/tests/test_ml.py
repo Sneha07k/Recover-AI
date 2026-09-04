@@ -13,7 +13,7 @@ def make_test_session():
     engine = create_engine(
         "sqlite:///:memory:", connect_args={"check_same_thread": False}
     )
-    from app.models import models  # noqa: F401 registers tables on Base
+    from app.models import models  
 
     Base.metadata.create_all(bind=engine)
     Session = sessionmaker(bind=engine)

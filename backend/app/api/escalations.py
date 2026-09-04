@@ -32,13 +32,7 @@ def list_escalations(
     limit: int = Query(50, ge=1, le=200),
     db: Session = Depends(get_db),
 ):
-    """
-    Lists escalated cases — the ones the policy engine flagged as needing
-    a human, not the strategy engine's own choices. `pending` (default)
-    shows only cases nobody has acted on yet; the whole point of this
-    endpoint existing is that ESCALATE previously had no interface for
-    the human it escalates TO.
-    """
+    
     query = db.query(PolicyDecision).filter(PolicyDecision.verdict == "escalate")
 
     if status == "pending":
@@ -47,7 +41,7 @@ def list_escalations(
         query = query.filter(PolicyDecision.human_resolution == "approved")
     elif status == "denied":
         query = query.filter(PolicyDecision.human_resolution == "denied")
-    # "all" applies no additional filter
+   
 
     decisions = query.order_by(PolicyDecision.id.desc()).limit(limit).all()
 
@@ -61,13 +55,7 @@ def list_escalations(
 
 @router.post("/{policy_decision_id}/approve")
 def approve_escalation(policy_decision_id: int, db: Session = Depends(get_db)):
-    """
-    A human approves this specific escalated action. This is a deliberate
-    override — we do NOT re-run evaluate_policy here, because the whole
-    point of escalation is that a human has now reviewed the case and is
-    explicitly authorizing it. execute_strategy runs immediately and the
-    real simulated outcome is returned.
-    """
+   
     pd = db.get(PolicyDecision, policy_decision_id)
     if pd is None or pd.verdict != "escalate":
         raise HTTPException(status_code=404, detail="Escalated case not found")
@@ -105,11 +93,7 @@ def approve_escalation(policy_decision_id: int, db: Session = Depends(get_db)):
 
 @router.post("/{policy_decision_id}/deny")
 def deny_escalation(policy_decision_id: int, db: Session = Depends(get_db)):
-    """
-    A human denies this escalated action. Nothing executes — the case is
-    simply marked resolved as denied, distinct from an automated policy
-    DENY (this was a human choice made after seeing the specifics).
-    """
+    
     pd = db.get(PolicyDecision, policy_decision_id)
     if pd is None or pd.verdict != "escalate":
         raise HTTPException(status_code=404, detail="Escalated case not found")

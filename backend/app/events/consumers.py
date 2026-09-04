@@ -18,12 +18,7 @@ def log_payment_failed(db, event: Event) -> None:
 
 
 def _run_closed_loop_without_agent(db, event: Event) -> None:
-    """
-    Wraps the closed loop with use_agent_for_ambiguous=False for the
-    default automatic pipeline — real LLM calls stay opt-in only (see
-    scripts/run_agent_demo.py), never fired automatically across a bulk
-    simulation of thousands of failures.
-    """
+   
     run_closed_loop_on_payment_failed(db, event, use_agent_for_ambiguous=False)
 
 

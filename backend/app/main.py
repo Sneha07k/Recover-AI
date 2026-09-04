@@ -1,6 +1,6 @@
 ﻿from contextlib import asynccontextmanager
 from pathlib import Path
-
+from app.api.customers import router as customers_router
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
@@ -73,16 +73,11 @@ app.include_router(audit_router)
 app.include_router(metrics_router)
 app.include_router(actions_router)
 app.include_router(escalations_router)
+app.include_router(customers_router)
 
 
 @app.get("/health")
 def health_check(db: Session = Depends(get_db)):
-    """
-    Confirms the API is running AND the database connection actually works.
-    We run a trivial query rather than just returning {"status": "ok"} so
-    that a broken DB connection fails loudly here instead of surprising us
-    later in a real endpoint.
-    """
     db.execute(text("SELECT 1"))
     return {
         "status": "ok",
@@ -93,14 +88,6 @@ def health_check(db: Session = Depends(get_db)):
 
 @app.get("/")
 def serve_dashboard():
-    """
-    Serves the dashboard at the app's root, so the whole project is one
-    deployable service with one URL — no separate static host, no CORS
-    configuration needed in production.
-    """
     return FileResponse(FRONTEND_DIR / "index.html")
 
-
-# Any other static asset the dashboard might reference (currently none,
-# since it's a single self-contained file, but this keeps the door open).
 app.mount("/static", StaticFiles(directory=str(FRONTEND_DIR)), name="static")

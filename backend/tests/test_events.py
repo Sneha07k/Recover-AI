@@ -12,7 +12,7 @@ def make_test_session():
     engine = create_engine(
         "sqlite:///:memory:", connect_args={"check_same_thread": False}
     )
-    from app.models import models  # noqa: F401 registers tables on Base
+    from app.models import models 
 
     Base.metadata.create_all(bind=engine)
     Session = sessionmaker(bind=engine)
@@ -81,12 +81,7 @@ def test_subscribers_not_called_for_other_event_types():
 
 
 def test_generate_transactions_emits_two_events_per_transaction():
-    """
-    As of Phase 9, generate_transactions only detects failures — it no
-    longer runs any recovery logic itself (that moved to the closed-loop
-    controller). So every transaction gets exactly PAYMENT_CREATED plus
-    one outcome event, regardless of success or failure.
-    """
+    
     from app.simulator.generator import (
         create_merchant,
         generate_customers,

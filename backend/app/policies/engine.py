@@ -24,20 +24,17 @@ ALLOW = "allow"
 DENY = "deny"
 ESCALATE = "escalate"
 
-# Precedence when checks disagree: a single DENY always wins, then
-# ESCALATE, then ALLOW. The system errs toward caution — it never lets a
-# risky case slip through just because most other checks happened to pass.
+
 _VERDICT_RANK = {ALLOW: 0, ESCALATE: 1, DENY: 2}
 
-# Strategies that consume a retry attempt against MAX_RETRIES.
+
 RETRY_STRATEGIES = {
     RecoveryStrategy.RETRY,
     RecoveryStrategy.DELAYED_RETRY,
     RecoveryStrategy.ALTERNATE_PAYMENT,
 }
 
-# Strategies that involve directly contacting the customer, and therefore
-# must respect an opt-out.
+
 CUSTOMER_FACING_STRATEGIES = {
     RecoveryStrategy.INCENTIVE,
     RecoveryStrategy.CUSTOMER_REMINDER,
@@ -209,26 +206,13 @@ def evaluate_policy(
     amount: float,
     requires_approval: bool = False,
 ) -> PolicyResult:
-    """
-    Runs every guardrail check and combines them into one verdict. A single
-    DENY always outranks an ESCALATE, which always outranks an ALLOW.
-
-    Neither the strategy engine (Phase 6) nor the LLM agent (Phase 7) has
-    any way to skip this function — every proposal must pass through it
-    before Phase 9 is allowed to execute anything.
-    """
+    
     checks = [_check_valid_action(strategy)]
 
     if checks[-1].verdict == DENY:
-        # No point checking anything else against an action that isn't
-        # even recognized.
         return PolicyResult(verdict=DENY, checks=checks)
 
     if strategy == RecoveryStrategy.STOP:
-        # Doing nothing needs no authorization — this also means a
-        # high-value transaction where the deterministic engine or agent
-        # already decided not to act doesn't get flagged for human review
-        # just because of its amount. Only actions need approval.
         checks.append(
             CheckOutcome(
                 "stop_is_always_allowed", ALLOW, "No action is being taken; nothing to authorize."

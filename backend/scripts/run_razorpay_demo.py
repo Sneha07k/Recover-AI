@@ -1,26 +1,10 @@
-"""
-Run with: python scripts/run_razorpay_demo.py
-Requires RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET (TEST MODE keys, starting
-with rzp_test_) set in backend/.env
-Assumes scripts/run_simulation.py has already been run.
-
-Deliberately NOT wired into the automatic event pipeline, for two reasons:
-1. Razorpay's test mode allows only 30 Payment Links per business, total -
-   a bulk simulation of thousands of failures cannot create one per case.
-2. RecoverAI's simulator remains the sole source of truth for recovery
-   outcomes (Phase 9). This script only proves the connection is real.
-
-Opening the short_url and completing (or not completing) the test payment
-has NO effect on this simulation's recorded outcome.
-"""
-
 from app.database import SessionLocal, init_db
 from app.integrations.razorpay_client import create_recovery_payment_link
 from app.models.enums import RecoveryStrategy, TransactionStatus
 from app.models.models import Customer, PolicyDecision, Transaction
 from app.policies.engine import ALLOW
 
-MAX_LINKS_TO_CREATE = 3  # stay well under the test-mode cap of 30/business
+MAX_LINKS_TO_CREATE = 3  
 
 
 def main():
@@ -39,7 +23,7 @@ def main():
             .all()
         )
 
-        pairs = []  # list of (transaction, customer, strategy)
+        pairs = []  
 
         if candidates:
             for decision in candidates:
@@ -47,13 +31,7 @@ def main():
                 customer = db.get(Customer, decision.customer_id)
                 pairs.append((transaction, customer, decision.strategy))
         else:
-            # Known, honest limitation carried over from Phase 6: given the
-            # current STRATEGY_DEFINITIONS multipliers, alternate_payment
-            # usually dominates the EV comparison, so INCENTIVE/
-            # CUSTOMER_REMINDER rarely if ever get chosen naturally. Rather
-            # than fail with nothing to show, fall back to demonstrating
-            # the integration directly on an arbitrary failed transaction -
-            # clearly labeled as a manual demo, not a real policy decision.
+           
             print(
                 "No naturally-chosen INCENTIVE/CUSTOMER_REMINDER decisions found "
                 "(see Phase 6's honest note on alternate_payment dominating the "

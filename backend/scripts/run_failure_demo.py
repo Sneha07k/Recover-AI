@@ -240,10 +240,7 @@ def scenario_5_invalid_action(db):
 
 
 def main():
-    # Seed chosen so Scenario 1 reliably exhausts the retry limit AND
-    # Scenario 4 lands on a genuine failed-but-authorized attempt — as
-    # explained in the module docstring, the odds themselves are genuine
-    # and unaltered, only the seed is chosen for a repeatable walkthrough.
+   
     np.random.seed(5)
 
     db = make_session()
