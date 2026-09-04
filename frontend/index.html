@@ -393,10 +393,10 @@
   .control-buttons { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 4px; }
   .action-result { margin-top: 16px; font-size: 13px; color: var(--muted); }
   .action-result:empty { margin-top: 0; }
-  .result-table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 12px; margin-top: 10px; }
-  .result-table th, .result-table td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--border); }
+  .result-table { width: 100%; border-collapse: collapse; table-layout: fixed; font-family: var(--mono); font-size: 12px; margin-top: 10px; }
+  .result-table th, .result-table td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--border); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .result-table th { color: var(--muted); font-weight: 500; text-transform: uppercase; font-size: 10px; letter-spacing: 0.05em; }
-  .result-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .result-table th.num, .result-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
   .scenario-card { background: var(--surface-raised); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-top: 10px; }
   .scenario-card summary { cursor: pointer; font-weight: 600; font-size: 13px; color: var(--text); list-style: none; }
   .scenario-card summary::-webkit-details-marker { display: none; }
@@ -749,7 +749,14 @@
 </div>
 
 <script>
-const API_BASE = window.location.protocol === 'file:' ? 'http://127.0.0.1:8000' : '';
+// When frontend and backend are deployed SEPARATELY (e.g. frontend on
+// Vercel, backend on Render), set this to your backend's full URL.
+// Leave it blank for the default single-service deployment (this
+// project's own recommendation), where both are served from the same
+// origin and this isn't needed at all.
+const BACKEND_URL_OVERRIDE = ''; // e.g. 'https://recoverai.onrender.com'
+
+const API_BASE = BACKEND_URL_OVERRIDE || (window.location.protocol === 'file:' ? 'http://127.0.0.1:8000' : '');
 
 // Small, dependency-free celebratory moment — fires when an escalated
 // case is approved AND actually recovers real revenue. No canvas
@@ -1264,7 +1271,10 @@ document.getElementById('btn-experiment').addEventListener('click', async (e) =>
     showResult(`
       <div>Fair comparison across ${result.total_failed} failed transactions (same population, same underlying randomness per transaction).</div>
       <table class="result-table">
-        <thead><tr><th>Condition</th><th>Interventions</th><th>Recovered</th><th>Rate</th><th>Revenue recovered</th></tr></thead>
+        <colgroup>
+          <col style="width:22%"><col style="width:16%"><col style="width:16%"><col style="width:14%"><col style="width:32%">
+        </colgroup>
+        <thead><tr><th>Condition</th><th class="num">Interventions</th><th class="num">Recovered</th><th class="num">Rate</th><th class="num">Revenue recovered</th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
     `);
