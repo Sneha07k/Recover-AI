@@ -12,6 +12,11 @@ pipeline run, see real numbers.
 first load, so a judge opening the deployed URL sees a populated, working system immediately.
 
 ---
+The application is deployed on Render:
+
+[Open RecoverAI](https://recover-ai-o636.onrender.com/)
+
+---
 
 ## The pipeline
 
