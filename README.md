@@ -192,11 +192,3 @@ Once live, confirm:
 - [ ] "Train recovery model" and "Run simulation" update the "Under the hood" cards live
 
 ---
-
-## A note on honesty
-
-This project deliberately reports its own weak points as readily as its strengths: the ML model's
-honest evaluation against a simple baseline, the experimentation harness's documented scope
-limits, and a dedicated failure-demonstration suite proving the system fails safely rather than
-silently. None of the numbers shown in the dashboard are fabricated or pre-scripted - every click
-computes something real, live, from the current database state.
